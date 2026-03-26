@@ -4,11 +4,15 @@
      Grey default, Green hover, NO blue/orange
      ============================================= */
 
-  /* === Avatar zoom out === */
+  /* === Avatar — no zoom on hover, face shifted up === */
   #sidebar #avatar img {
     object-fit: cover;
-    object-position: center 20%;
-    transform: scale(0.8);
+    object-position: center top;
+    transform: scale(0.7) translateY(-20%);
+    transition: none !important;
+  }
+  #sidebar #avatar img:hover {
+    transform: scale(0.7) translateY(-20%) !important;
   }
 
   /* ===================================================
