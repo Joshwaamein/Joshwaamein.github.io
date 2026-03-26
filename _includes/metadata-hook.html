@@ -1,0 +1,320 @@
+<style>
+  /* =============================================
+     MATRIX THEME — Nuclear color override
+     Grey default, Green hover, NO blue/orange
+     ============================================= */
+
+  /* === Avatar zoom out === */
+  #sidebar #avatar img {
+    object-fit: cover;
+    object-position: center 20%;
+    transform: scale(0.8);
+  }
+
+  /* ===================================================
+     NUCLEAR: Override ALL Bootstrap/Chirpy color vars
+     =================================================== */
+  :root,
+  html,
+  html[data-mode="dark"],
+  [data-mode="dark"],
+  body {
+    --bs-link-color: #c9d1d9 !important;
+    --bs-link-hover-color: #00ff41 !important;
+    --bs-link-color-rgb: 201, 209, 217 !important;
+    --bs-primary: #c9d1d9 !important;
+    --bs-primary-rgb: 201, 209, 217 !important;
+    --link-color: #c9d1d9 !important;
+    --link-hover-color: #00ff41 !important;
+    --bs-btn-color: #c9d1d9 !important;
+    --bs-btn-hover-color: #00ff41 !important;
+    --bs-btn-active-color: #00ff41 !important;
+    --bs-btn-hover-bg: rgba(0, 255, 65, 0.08) !important;
+    --bs-btn-active-bg: rgba(0, 255, 65, 0.12) !important;
+    --bs-btn-hover-border-color: #00ff41 !important;
+    --bs-btn-active-border-color: #00ff41 !important;
+    --bs-btn-focus-shadow-rgb: 0, 255, 65 !important;
+    --bs-btn-outline-primary-color: #c9d1d9 !important;
+    --toc-highlight: #00ff41 !important;
+  }
+
+  /* ===================================================
+     NUCLEAR: ALL links — grey default, green hover
+     =================================================== */
+  a,
+  a:link,
+  a:visited {
+    color: #c9d1d9 !important;
+  }
+  a:hover,
+  a:active,
+  a:focus {
+    color: #00ff41 !important;
+  }
+
+  /* ===================================================
+     NUCLEAR: ALL buttons — grey default, green hover
+     =================================================== */
+  .btn,
+  .btn-outline-primary,
+  .btn-primary,
+  .btn:link,
+  .btn:visited,
+  .btn-outline-primary:link,
+  .btn-outline-primary:visited,
+  .post-tag,
+  .page-link {
+    color: #c9d1d9 !important;
+    border-color: #30363d !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+  .btn:hover,
+  .btn:focus,
+  .btn:active,
+  .btn.active,
+  .btn-outline-primary:hover,
+  .btn-outline-primary:focus,
+  .btn-outline-primary:active,
+  .btn-outline-primary.active,
+  .post-tag:hover,
+  .post-tag:focus,
+  .page-link:hover,
+  .page-link:focus {
+    color: #00ff41 !important;
+    border-color: #00ff41 !important;
+    background-color: rgba(0, 255, 65, 0.08) !important;
+    box-shadow: none !important;
+  }
+
+  /* Active pagination page */
+  .page-item.active .page-link {
+    color: #00ff41 !important;
+    background-color: rgba(0, 255, 65, 0.15) !important;
+    border-color: #00ff41 !important;
+  }
+
+  /* ===================================================
+     NUCLEAR: TOC (table of contents) — tocbot
+     =================================================== */
+  .toc-link,
+  .tocbot .toc-link,
+  .toc a,
+  nav[data-toggle="toc"] a {
+    color: #c9d1d9 !important;
+  }
+  .toc-link:hover,
+  .toc-link.is-active-link,
+  .tocbot .toc-link:hover,
+  .tocbot .is-active-link,
+  .toc a:hover,
+  .toc a.active,
+  nav[data-toggle="toc"] a:hover,
+  nav[data-toggle="toc"] a.active {
+    color: #00ff41 !important;
+    border-left-color: #00ff41 !important;
+  }
+  .is-active-link::before {
+    background-color: #00ff41 !important;
+  }
+
+  /* ===================================================
+     NUCLEAR: Bootstrap utility overrides
+     =================================================== */
+  .text-primary {
+    color: #c9d1d9 !important;
+  }
+  .border-primary {
+    border-color: #c9d1d9 !important;
+  }
+  .bg-primary {
+    background-color: rgba(0, 255, 65, 0.1) !important;
+  }
+
+  /* Focus outlines */
+  *:focus-visible {
+    outline-color: #00ff41 !important;
+  }
+  .btn-check:checked + .btn,
+  .btn-check:active + .btn,
+  .btn-check:focus + .btn {
+    color: #00ff41 !important;
+    background-color: rgba(0, 255, 65, 0.12) !important;
+    border-color: #00ff41 !important;
+    box-shadow: none !important;
+  }
+
+  /* ===================================================
+     SIDEBAR — green Matrix theme (unchanged)
+     =================================================== */
+  #sidebar {
+    background: linear-gradient(180deg, #000000 0%, #001a00 100%) !important;
+    border-right: 1px solid #003b00 !important;
+  }
+  #sidebar a,
+  #sidebar .nav-link,
+  #sidebar .site-title {
+    color: inherit !important;
+  }
+  #sidebar .site-title {
+    color: #00ff41 !important;
+    text-shadow: 0 0 10px #008f11, 0 0 20px #003b00 !important;
+    font-family: 'Fira Code', 'Source Code Pro', monospace !important;
+  }
+  #sidebar .site-subtitle {
+    color: #00cc33 !important;
+    font-family: 'Fira Code', 'Source Code Pro', monospace !important;
+  }
+  #sidebar .nav-link,
+  #sidebar .nav-link span,
+  #sidebar .nav-link i {
+    color: #008f11 !important;
+    font-family: 'Fira Code', monospace !important;
+  }
+  #sidebar .nav-link.active,
+  #sidebar .nav-link:hover,
+  #sidebar .nav-link.active span,
+  #sidebar .nav-link:hover span,
+  #sidebar .nav-link.active i,
+  #sidebar .nav-link:hover i {
+    color: #00ff41 !important;
+    text-shadow: 0 0 8px #008f11 !important;
+  }
+
+  /* ===================================================
+     BODY & BACKGROUNDS
+     =================================================== */
+  body {
+    background-color: #0a0a0a !important;
+  }
+  #main-wrapper {
+    background-color: transparent !important;
+    position: relative;
+    z-index: 1;
+  }
+  .container {
+    background-color: transparent !important;
+  }
+
+  /* ===================================================
+     MATRIX RAIN CANVAS
+     =================================================== */
+  #matrix-rain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.12;
+  }
+
+  /* ===================================================
+     EXACT Chirpy selector overrides (kills orange #d2603a)
+     =================================================== */
+  #page-category a:hover,
+  #page-tag a:hover,
+  #access-lastmod a:hover,
+  .post-tail-wrapper .license-wrapper>a:hover,
+  #search-results a:hover,
+  footer a:hover,
+  #topbar #breadcrumb a:hover,
+  .post-meta a:not([class]):hover,
+  .content a:not(.img-link):hover {
+    color: #00ff41 !important;
+    border-bottom: 1px solid #00ff41 !important;
+  }
+
+  /* EXACT Chirpy override (kills blue #007bff border) */
+  .btn.btn-outline-primary:not(.disabled):hover {
+    border-color: #00ff41 !important;
+  }
+
+  /* Override Chirpy dark mode variables */
+  html[data-mode=dark],
+  html:not([data-mode]) {
+    --link-color: #c9d1d9 !important;
+    --toc-highlight: #00ff41 !important;
+    --tag-hover: rgba(0, 255, 65, 0.08) !important;
+  }
+
+  /* Tag hover */
+  .post-tags .post-tag:hover,
+  .tag:hover {
+    background: rgba(0, 255, 65, 0.08) !important;
+    border-color: #00ff41 !important;
+    color: #00ff41 !important;
+  }
+
+  /* TOC active */
+  #toc-wrapper ul .is-active-link {
+    color: #00ff41 !important;
+  }
+  #toc-wrapper ul .is-active-link::before {
+    background-color: #00ff41 !important;
+  }
+  #toc-popup .is-active-link {
+    color: #00ff41 !important;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+</style>
+
+<!-- Matrix Digital Rain Animation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var canvas = document.createElement('canvas');
+  canvas.id = 'matrix-rain';
+  document.body.prepend(canvas);
+
+  var ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  chars = chars.split('');
+
+  var fontSize = 14;
+  var columns = Math.floor(canvas.width / fontSize);
+  var drops = [];
+
+  for (var i = 0; i < columns; i++) {
+    drops[i] = Math.floor(Math.random() * -80);
+  }
+
+  function draw() {
+    ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = fontSize + 'px monospace';
+
+    for (var i = 0; i < drops.length; i++) {
+      var text = chars[Math.floor(Math.random() * chars.length)];
+
+      var brightness = Math.random();
+      if (brightness > 0.96) {
+        ctx.fillStyle = '#39ff14';
+      } else if (brightness > 0.7) {
+        ctx.fillStyle = '#00ff41';
+      } else {
+        ctx.fillStyle = '#008f11';
+      }
+
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+  }
+
+  setInterval(draw, 60);
+});
+</script>
