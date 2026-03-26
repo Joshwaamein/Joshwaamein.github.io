@@ -1,0 +1,124 @@
+theme: jekyll-theme-chirpy
+
+lang: en
+
+timezone: Europe/London
+
+title: Joshua Mein
+tagline: Building, Breaking & Automating Things
+description: >-
+  A tech blog covering homelab setups, Linux administration, DevOps,
+  cloud computing, networking, security, and IoT projects.
+
+url: "https://joshwaamein.github.io"
+baseurl: ""
+
+github:
+  username: Joshwaamein
+
+social:
+  name: Joshua Mein
+  email: ""
+  links:
+    - https://github.com/Joshwaamein
+    - https://www.linkedin.com/in/joshuamein/
+
+# Site verification (optional)
+# google_site_verification:
+
+# Analytics (optional)
+# google_analytics:
+#   id:
+
+theme_mode: dark
+
+# Avatar image
+avatar: "/assets/img/avatar.jpg"
+
+# Social preview image
+# img_cdn:
+
+toc: true
+
+comments:
+  provider: false
+
+# Self-hosted static assets
+assets:
+  self_host:
+    enabled: false
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: highlight
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+      start_line: 1
+
+collections:
+  tabs:
+    output: true
+    sort_by: order
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      comments: false
+      toc: true
+      permalink: /posts/:title/
+  - scope:
+      path: _tabs
+      type: tabs
+    values:
+      layout: page
+      permalink: /:title/
+
+sass:
+  style: compressed
+
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  profile: false
+  blanklines: false
+  ignore:
+    envs: [development]
+
+exclude:
+  - "*.gem"
+  - "*.gemspec"
+  - docs
+  - tools
+  - README.md
+  - LICENSE
+  - "*.config.js"
+  - package*.json
+  - node_modules
+  - convert.js
+
+jekyll-archives:
+  enabled: [categories, tags]
+  layouts:
+    category: category
+    tag: tag
+  permalinks:
+    tag: /tags/:name/
+    category: /categories/:name/
+
+paginate: 10
+paginate_path: "/page/:num/"
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-archives
+  - jekyll-paginate
