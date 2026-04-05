@@ -380,7 +380,3 @@ pytest tests/ -m e2e          # full pipeline test
 5. **`PYTORCH_NO_HIP_MEMORY_CACHING=1` is essential.** Without it, ROCm caches GPU memory aggressively and you'll hit OOM on longer runs. This env var saves roughly a third of VRAM.
 
 6. **Separate config from machine-specific paths.** Using `.env` for absolute paths means the same `config.yaml` works on any machine without modification.
-
----
-
-*The project is at `Nextcloud/Projects/voice_generator` — not public, but the full approach is documented here.*
