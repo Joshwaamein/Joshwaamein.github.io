@@ -408,8 +408,11 @@ $env:HSA_OVERRIDE_GFX_VERSION = "11.0.0"   # force gfx1100 (RDNA3)
 | ONNX + DirectML | 256 (FP32) | ~64s | Better |
 | **ROCm native** | **32** | **~10s** | Good |
 | **ROCm native** | **64** | **~17s** | Better |
+| **ROCm native** | **128** | **~30s** | Best |
 
-The ROCm native backend is **3x faster** than ONNX+DirectML at equivalent quality settings, because the entire pipeline runs on GPU — including the mel spectrogram preprocessing and vocoder decode that the ONNX hybrid routes to CPU.
+The ROCm native backend is **3x faster** than ONNX+DirectML at low NFE steps (32/64), where the overhead of CPU↔GPU data transfers in the ONNX hybrid dominates. At NFE=128, ROCm native (~30s) is roughly equivalent to ONNX+DirectML (~33s) — but with better quality since the full pipeline runs in FP32 on GPU with no precision loss between stages.
+
+The sweet spot for ROCm native is **NFE=64** — 2x better quality than NFE=32, still 2x faster than ONNX+DirectML, and the quality improvement from 64→128 is marginal for most use cases.
 
 ### Compatibility patches required
 
