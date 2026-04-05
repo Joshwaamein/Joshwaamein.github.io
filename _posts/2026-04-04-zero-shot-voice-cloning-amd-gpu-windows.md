@@ -360,22 +360,77 @@ pytest tests/ -m e2e          # Full pipeline test
 
 ---
 
-## What's Next: ROCm for Windows
+## Update: ROCm for Windows is Here
 
-The landscape is changing. AMD recently shipped the **HIP SDK for Windows** — this is ROCm-style GPU compute running natively on Windows, no WSL2 required. It's a significant step towards parity with CUDA on Windows.
+Since building the ONNX + DirectML pipeline, AMD shipped **ROCm 7.1 for Windows** — and it works. `torch.cuda.is_available()` returns `True` on the RX 7900 XTX with PyTorch 2.9.0+rocmsdk20251116.
 
-What this means for this project: once PyTorch ROCm Windows wheels are available and stable, the ONNX hybrid approach could be replaced with a simpler setup:
+I've now built a second backend (`generate_f5_rocm.py`) that runs the **full F5-TTS pipeline natively on ROCm** — no ONNX export, no DirectML, no CPU fallback for FFT ops. Everything runs on GPU.
 
-```python
-# Future: if PyTorch ROCm Windows wheels land
-import torch
-device = torch.device("cuda")  # ROCm uses the CUDA API surface
-model = F5TTS().to(device)
+### Setting it up
+
+```powershell
+# Create a dedicated ROCm venv
+python -m venv venv_rocm
+
+# Install ROCm SDK + PyTorch from AMD's repo
+.\venv_rocm\Scripts\python.exe -m pip install `
+  https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm-0.1.dev0.tar.gz `
+  https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_core-0.1.dev0-py3-none-win_amd64.whl `
+  https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_devel-0.1.dev0-py3-none-win_amd64.whl `
+  https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_libraries_custom-0.1.dev0-py3-none-win_amd64.whl `
+  https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torch-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl `
+  https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchaudio-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl
+
+# Install f5-tts
+.\venv_rocm\Scripts\python.exe -m pip install f5-tts soundfile pydub pyyaml
 ```
 
-The ONNX + DirectML approach would still be valid — it's faster to load and has lower memory overhead — but the full PyTorch path would open up more flexibility for experimentation.
+### Running it
 
-For now, the ONNX hybrid is the most practical solution for AMD GPU users on Windows. It works, it's fast, and it doesn't require any special drivers beyond the standard AMD Adrenalin software.
+```powershell
+# launch_voice_rocm.ps1 sets the required env vars automatically
+.\scripts\launch_voice_rocm.ps1
+.\scripts\launch_voice_rocm.ps1 --nfe 64
+```
+
+The launcher sets:
+```powershell
+$env:PYTORCH_NO_HIP_MEMORY_CACHING = "1"   # saves ~1/3 VRAM
+$env:HIP_VISIBLE_DEVICES = "0"              # target RX 7900 XTX
+$env:HSA_OVERRIDE_GFX_VERSION = "11.0.0"   # force gfx1100 (RDNA3)
+```
+
+### Performance comparison
+
+| Backend | NFE | Time/clip | Quality |
+|---------|-----|-----------|---------|
+| ONNX + DirectML | 128 (FP16) | ~33s | Good |
+| ONNX + DirectML | 256 (FP32) | ~64s | Better |
+| **ROCm native** | **32** | **~10s** | Good |
+| **ROCm native** | **64** | **~17s** | Better |
+
+The ROCm native backend is **3x faster** than ONNX+DirectML at equivalent quality settings, because the entire pipeline runs on GPU — including the mel spectrogram preprocessing and vocoder decode that the ONNX hybrid routes to CPU.
+
+### Compatibility patches required
+
+ROCm 7.1 + PyTorch 2.9 + f5-tts 1.1.18 required a few patches:
+
+1. **`encodec/distrib.py`** — `torch.distributed.ReduceOp` moved in PyTorch 2.9, needs a try/except fallback
+2. **`torchaudio/__init__.py`** — torchaudio 2.9 requires torchcodec for `load()`, which doesn't have Windows DLLs; patched to fall back to soundfile
+3. **`f5_tts/model/cfm.py`** — sway sampling can produce duplicate timesteps; added `torch.unique()` to ensure strict monotonicity for torchdiffeq
+4. **`f5_tts/infer/utils_infer.py`** — replaced `ThreadPoolExecutor` with sequential processing to avoid tensor size mismatches when batching chunks of different lengths
+
+None of these are fundamental issues — they're version incompatibilities that will be fixed upstream as the ROCm Windows ecosystem matures.
+
+### The ONNX + DirectML path is still useful
+
+The ROCm native backend is faster, but the ONNX + DirectML approach has advantages:
+- **No ROCm SDK required** — works with standard AMD Adrenalin drivers
+- **Lower memory overhead** — FP16 ONNX models use less VRAM
+- **More stable** — fewer compatibility patches needed
+- **Portable** — the ONNX models work on any DirectX 12 GPU (NVIDIA, Intel, AMD)
+
+For a gaming machine where you want minimal setup friction, ONNX + DirectML is still a solid choice. For maximum performance, ROCm native is the way to go.
 
 ---
 
