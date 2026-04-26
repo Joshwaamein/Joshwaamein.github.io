@@ -46,7 +46,8 @@ comments:
 # Self-hosted static assets
 assets:
   self_host:
-    enabled: false
+    enabled: true
+    env: production
 
 kramdown:
   input: GFM
