@@ -38,6 +38,9 @@ avatar: "/assets/img/avatar.jpg"
 # Social preview image
 # img_cdn:
 
+search:
+  provider: lunr
+
 toc: true
 
 comments:
