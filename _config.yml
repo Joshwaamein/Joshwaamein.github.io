@@ -43,11 +43,27 @@ toc: true
 comments:
   provider: false
 
-# Self-hosted static assets
+# Self-hosted static assets.
+#
+# IMPORTANT: leave this disabled (or unset). The Chirpy gem-based theme
+# only ships the assets/lib/* directory tree when you've installed the
+# theme via the starter template (jekyll-theme-chirpy-starter), which
+# runs a `npm run build` step that copies node_modules into _site.
+#
+# This site uses the gem (`gem "jekyll-theme-chirpy"`), so /assets/lib/*
+# does not exist in the built site. Setting self_host.enabled = true
+# makes Chirpy emit <script src="/assets/lib/..."> tags which all 404,
+# breaking site search and silently swallowing the input/cancel/trigger
+# event listeners (because the script throws a ReferenceError on dayjs
+# before it gets a chance to wire them up).
+#
+# Leaving self_host disabled makes Chirpy emit a single combined
+# jsdelivr <script> bundle with simple-jekyll-search, dayjs, the
+# loading-attribute polyfill, etc. — all of which are required for the
+# search box and the lazy-load handling to work.
 assets:
   self_host:
-    enabled: true
-    env: production
+    enabled: false
 
 kramdown:
   input: GFM
