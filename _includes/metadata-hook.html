@@ -292,6 +292,15 @@
 <!-- Font Awesome — CDN fallback since self-host pipeline doesn't run on GitHub Pages -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+<!-- simple-jekyll-search — CDN fallback. The Chirpy gem doesn't vendor
+     assets/lib/simple-jekyll-search/* into the built site, so the theme's
+     <script src="/assets/lib/simple-jekyll-search/simple-jekyll-search.min.js">
+     returns 404. The inline SimpleJekyllSearch({...}) init at the bottom of
+     the page then fails with ReferenceError and search silently does nothing.
+     Loading the script from a CDN here defines the global before the inline
+     init runs. -->
+<script defer src="https://cdn.jsdelivr.net/npm/simple-jekyll-search@1.10.0/dest/simple-jekyll-search.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <!-- Matrix Digital Rain Animation -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
