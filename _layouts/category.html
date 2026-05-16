@@ -1,0 +1,14 @@
+---
+layout: page
+---
+<header class="page-header">
+  <p class="prompt">~/categories $ cat <span class="prompt-arg">{{ page.title }}</span></p>
+  <h1 class="page-title">// {{ page.title }}</h1>
+  <p class="page-sub">{{ page.posts.size }} post{% if page.posts.size != 1 %}s{% endif %} in this category.</p>
+</header>
+
+<section class="post-list">
+  {%- for post in page.posts -%}
+    {%- include post-card.html post=post -%}
+  {%- endfor -%}
+</section>

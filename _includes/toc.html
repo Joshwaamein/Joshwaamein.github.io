@@ -1,0 +1,30 @@
+{%- comment -%}
+  Auto-extracts <h2>/<h3> from rendered post content into a TOC.
+  Param: content
+{%- endcomment -%}
+<aside class="toc" aria-label="Table of Contents">
+  <h2 class="toc-heading">// Contents</h2>
+  <ol class="toc-list">
+  {%- assign chunks = include.content | split: '<h2 ' -%}
+  {%- for chunk in chunks -%}
+    {%- if forloop.first -%}{%- continue -%}{%- endif -%}
+    {%- assign id_part = chunk | split: 'id="' | last | split: '"' | first -%}
+    {%- assign title_part = chunk | split: '>' | slice: 1 | first | split: '</h2' | first | strip_html | strip -%}
+    {%- if title_part != "" -%}
+      <li class="toc-l2"><a href="#{{ id_part }}">{{ title_part }}</a>
+        {%- assign sub = chunk | split: '<h3 ' -%}
+        {%- if sub.size > 1 -%}
+          <ol>
+            {%- for s in sub -%}
+              {%- if forloop.first -%}{%- continue -%}{%- endif -%}
+              {%- assign s_id = s | split: 'id="' | last | split: '"' | first -%}
+              {%- assign s_title = s | split: '>' | slice: 1 | first | split: '</h3' | first | strip_html | strip -%}
+              {%- if s_title != "" -%}<li class="toc-l3"><a href="#{{ s_id }}">{{ s_title }}</a></li>{%- endif -%}
+            {%- endfor -%}
+          </ol>
+        {%- endif -%}
+      </li>
+    {%- endif -%}
+  {%- endfor -%}
+  </ol>
+</aside>

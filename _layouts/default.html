@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: 'en' }}">
+<head>
+  {%- include head.html -%}
+</head>
+<body>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+
+  <div class="app">
+    {%- include header.html -%}
+
+    <main class="main" role="main">
+      {{ content }}
+    </main>
+
+    {%- include footer.html -%}
+  </div>
+
+  <script src="{{ '/assets/js/matrix-rain.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/app.js' | relative_url }}"></script>
+</body>
+</html>

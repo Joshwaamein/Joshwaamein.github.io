@@ -1,0 +1,185 @@
+/* =====================================================================
+   Layout — app shell, header, nav, footer
+   ===================================================================== */
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 4rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  margin-top: 2rem;
+}
+
+/* ---------- Header ---------- */
+.header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  backdrop-filter: blur(6px);
+}
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-weight: 700;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  color: var(--text);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  letter-spacing: 0.5px;
+}
+.logo:hover { text-decoration: none; color: var(--accent); }
+.logo-bracket { color: var(--accent); }
+.logo-cursor {
+  color: var(--accent);
+  animation: blink 1.05s step-end infinite;
+  margin-left: 2px;
+}
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .logo-cursor { animation: none; } }
+
+.header-right { display: flex; gap: 0.4rem; }
+
+.icon-btn {
+  width: 38px; height: 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  background: var(--bg-elev);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: 150ms ease;
+}
+.icon-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.theme-icon { display: none; }
+[data-theme="dark"] .theme-icon.sun  { display: block; }
+[data-theme="light"] .theme-icon.moon { display: block; }
+
+[data-a11y="true"] #a11y-toggle,
+[data-rain="off"] #rain-toggle {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ---------- Nav tabs ---------- */
+.nav-bar {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.nav-tab {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  padding: 0.65rem 1.1rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: 150ms ease;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  text-decoration: none;
+}
+.nav-tab:hover {
+  color: var(--text);
+  background: var(--accent-bg-soft);
+  text-decoration: none;
+}
+.nav-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-glow);
+}
+
+.nav-tab-external {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.nav-tab-external-icon {
+  font-size: 0.8em;
+  opacity: 0.75;
+  transition: transform 150ms ease;
+}
+.nav-tab-external:hover .nav-tab-external-icon {
+  transform: translate(2px, -2px);
+  opacity: 1;
+}
+@media (max-width: 560px) {
+  .nav-tab-external { margin-left: 0; }
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+  text-align: center;
+}
+.footer a { color: var(--text-dim); }
+.footer a:hover { color: var(--accent); }
+
+/* ---------- Page header / hero shared ---------- */
+.prompt {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+}
+.prompt-arg { color: var(--text); }
+
+.page-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  margin: 1rem 0 0.4rem;
+  color: var(--accent);
+}
+.page-sub {
+  color: var(--text-dim);
+  margin: 0 0 2rem;
+}
+
+.home-hero {
+  margin-top: 0.5rem;
+  padding: 2.5rem 0 1.5rem;
+}
+.home-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0 0 0.5rem;
+  line-height: 1.15;
+  background: linear-gradient(90deg, var(--text), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.02em;
+}
+[data-a11y="true"] .home-title { background: none; color: var(--accent); }
+.home-tagline {
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  margin: 0;
+}

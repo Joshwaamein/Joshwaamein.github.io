@@ -1,0 +1,30 @@
+{%- comment -%}
+  Top nav. Active state is computed by comparing first path segment of
+  current URL to the link's data-match attribute.
+{%- endcomment -%}
+{%- assign current = page.url | split: '/' | slice: 1, 1 | join: '' -%}
+<nav class="nav-bar" aria-label="Sections">
+  {%- assign items = "home|posts/||archives|archives/|categories|categories/|tags|tags/|about|about/" | split: "||" -%}
+
+  <a class="nav-tab {% if page.url == '/' or current == 'posts' or current == 'page' %}active{% endif %}"
+     href="{{ '/' | relative_url }}">Posts</a>
+
+  <a class="nav-tab {% if current == 'archives' %}active{% endif %}"
+     href="{{ '/archives/' | relative_url }}">Archives</a>
+
+  <a class="nav-tab {% if current == 'categories' %}active{% endif %}"
+     href="{{ '/categories/' | relative_url }}">Categories</a>
+
+  <a class="nav-tab {% if current == 'tags' %}active{% endif %}"
+     href="{{ '/tags/' | relative_url }}">Tags</a>
+
+  <a class="nav-tab {% if current == 'about' %}active{% endif %}"
+     href="{{ '/about/' | relative_url }}">About</a>
+
+  <a class="nav-tab nav-tab-external"
+     href="{{ site.portfolio_url }}"
+     target="_blank" rel="noopener"
+     title="Open my portfolio in a new tab">
+    Portfolio<span class="nav-tab-external-icon" aria-hidden="true">↗</span>
+  </a>
+</nav>

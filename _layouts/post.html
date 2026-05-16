@@ -1,0 +1,59 @@
+---
+layout: default
+---
+<article class="post">
+  <header class="post-header">
+    <h1 class="post-title">{{ page.title }}</h1>
+    <div class="post-meta">
+      <time datetime="{{ page.date | date_to_xmlschema }}">
+        {{ page.date | date: "%b %-d, %Y" }}
+      </time>
+      {%- if page.categories and page.categories.size > 0 -%}
+        <span class="dot">·</span>
+        <span class="post-cats">
+          {%- for cat in page.categories -%}
+            <a class="cat-chip" href="{{ '/categories/' | append: cat | downcase | append: '/' | relative_url }}">{{ cat }}</a>
+          {%- endfor -%}
+        </span>
+      {%- endif -%}
+    </div>
+    {%- if page.description -%}
+      <p class="post-description">{{ page.description }}</p>
+    {%- endif -%}
+  </header>
+
+  {%- assign toc_pattern = '<h[2-3]' -%}
+  {%- assign toc_count = content | split: toc_pattern | size | minus: 1 -%}
+  {%- if toc_count > 2 -%}
+    {%- include toc.html content=content -%}
+  {%- endif -%}
+
+  <div class="post-content">
+    {{ content }}
+  </div>
+
+  <footer class="post-footer">
+    {%- if page.tags and page.tags.size > 0 -%}
+      <div class="post-tags">
+        {%- for tag in page.tags -%}
+          <a class="tag" href="{{ '/tags/' | append: tag | downcase | append: '/' | relative_url }}">#{{ tag }}</a>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+    <nav class="post-nav" aria-label="Post navigation">
+      {%- if page.previous -%}
+        <a class="post-nav-link prev" href="{{ page.previous.url | relative_url }}">
+          <span class="post-nav-direction">← Previous</span>
+          <span class="post-nav-title">{{ page.previous.title }}</span>
+        </a>
+      {%- endif -%}
+      {%- if page.next -%}
+        <a class="post-nav-link next" href="{{ page.next.url | relative_url }}">
+          <span class="post-nav-direction">Next →</span>
+          <span class="post-nav-title">{{ page.next.title }}</span>
+        </a>
+      {%- endif -%}
+    </nav>
+  </footer>
+</article>

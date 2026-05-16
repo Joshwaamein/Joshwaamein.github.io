@@ -1,0 +1,36 @@
+{%- comment -%}
+  Renders a single post card on listing pages.
+  Param: post (a Jekyll post object)
+{%- endcomment -%}
+<article class="post-card">
+  <header class="post-card-header">
+    <h2 class="post-card-title">
+      <a href="{{ include.post.url | relative_url }}">{{ include.post.title }}</a>
+    </h2>
+    <div class="post-card-meta">
+      <time datetime="{{ include.post.date | date_to_xmlschema }}">
+        {{ include.post.date | date: "%b %-d, %Y" }}
+      </time>
+      {%- if include.post.categories and include.post.categories.size > 0 -%}
+        <span class="dot">·</span>
+        {%- for cat in include.post.categories -%}
+          <a class="cat-chip" href="{{ '/categories/' | append: cat | downcase | append: '/' | relative_url }}">{{ cat }}</a>
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+  </header>
+  <p class="post-card-excerpt">
+    {%- if include.post.description -%}
+      {{ include.post.description | strip_html | truncate: 220 }}
+    {%- else -%}
+      {{ include.post.excerpt | strip_html | truncate: 220 }}
+    {%- endif -%}
+  </p>
+  {%- if include.post.tags and include.post.tags.size > 0 -%}
+    <div class="post-card-tags">
+      {%- for tag in include.post.tags limit: 6 -%}
+        <a class="tag" href="{{ '/tags/' | append: tag | downcase | append: '/' | relative_url }}">#{{ tag }}</a>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+</article>

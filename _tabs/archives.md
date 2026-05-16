@@ -1,4 +1,6 @@
 ---
-layout: archives
-order: 3
+layout: archive
+title: Archives
+permalink: /archives/
+description: All posts on the Joshua Mein blog, grouped by year.
 ---

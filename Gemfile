@@ -1,22 +1,18 @@
 source "https://rubygems.org"
 
-gem "jekyll-theme-chirpy", "~> 7.2"
+gem "jekyll", "~> 4.3"
+gem "kramdown-parser-gfm"
 
 group :jekyll_plugins do
   gem "jekyll-feed"
-  gem "jekyll-seo-tag"
   gem "jekyll-sitemap"
+  gem "jekyll-seo-tag"
   gem "jekyll-archives"
-  gem "jekyll-paginate"
 end
 
-group :test do
-  gem "html-proofer", "~> 5.0"
+group :test, optional: true do
+  gem "html-proofer"
 end
 
-platforms :mingw, :x64_mingw, :mswin, :jruby do
-  gem "tzinfo", ">= 1", "< 3"
-  gem "tzinfo-data"
-end
-
-gem "wdm", "~> 0.1", :platforms => [:mingw, :x64_mingw, :mswin]
+# Performance: faster file watching on macOS / Linux
+gem "webrick"

@@ -1,0 +1,54 @@
+/* =====================================================================
+   Rouge syntax highlighting — GitHub-dark inspired (Matrix-friendly)
+   ===================================================================== */
+
+.highlight {
+  /* base set on .highlight in _post.scss */
+  color: var(--text);
+
+  /* generic */
+  .c, .c1, .cm, .cs, .cd { color: var(--text-faint); font-style: italic; }
+  .err { color: #f85149; }
+  .k, .kc, .kd, .kn, .kp, .kr, .kt { color: #ff7b72; }   /* keywords */
+  .o, .ow { color: #ff7b72; }                            /* operators */
+  .p { color: var(--text-dim); }                         /* punctuation */
+  .nb { color: #79c0ff; }                                /* builtins */
+  .nc, .ne, .nn, .nv, .vc, .vg, .vi { color: #d2a8ff; } /* class/var */
+  .nf, .fm { color: var(--accent); }                     /* function names — Matrix green */
+  .s, .s1, .s2, .sb, .sc, .sd, .se, .sh, .si, .sx, .sr, .ss { color: #a5d6ff; } /* strings */
+  .m, .mb, .mf, .mh, .mi, .mo, .mx { color: #79c0ff; }   /* numbers */
+  .na { color: #79c0ff; }                                /* attributes */
+  .nt { color: #7ee787; }                                /* tag names */
+  .gi { color: #7ee787; background: rgba(46, 160, 67, 0.15); display: inline-block; width: 100%; }
+  .gd { color: #ffa198; background: rgba(248, 81, 73, 0.15); display: inline-block; width: 100%; }
+  .gh, .gu { color: #79c0ff; font-weight: 700; }
+}
+
+/* Light theme tweaks for readability */
+[data-theme="light"] .highlight {
+  .c, .c1, .cm { color: #6e7781; }
+  .k, .kc, .kd, .kn, .kp, .kr, .kt, .o, .ow { color: #cf222e; }
+  .nb { color: #0550ae; }
+  .nc, .ne, .nn { color: #6f42c1; }
+  .nf { color: #008f11; }                                /* function names */
+  .s, .s1, .s2 { color: #0a3069; }
+  .m, .mi, .mf { color: #0550ae; }
+  .nt { color: #116329; }
+}
+
+/* Filename plate — used by some markdown engines (kramdown can't natively;
+   we leave the hook here in case posts use Liquid {% highlight %} blocks). */
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  padding: 0.4rem 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.code-header + .highlight { border-top-left-radius: 0; border-top-right-radius: 0; }

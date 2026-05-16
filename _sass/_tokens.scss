@@ -1,0 +1,77 @@
+/* =====================================================================
+   Tokens — single source of truth for colours, fonts, spacing, etc.
+   ===================================================================== */
+
+:root,
+[data-theme="dark"] {
+  --bg:               #0d1117;
+  --bg-elev:          #161b22;
+  --bg-elev-2:        #1c2128;
+  --border:           #30363d;
+  --border-strong:    #3d444d;
+  --text:             #c9d1d9;
+  --text-dim:         #8b949e;
+  --text-faint:       #6e7681;
+  --accent:           #00ff41;
+  --accent-dim:       #008f11;
+  --accent-bright:    #39ff7a;
+  --accent-glow:      rgba(0, 255, 65, 0.35);
+  --accent-bg-soft:   rgba(0, 255, 65, 0.08);
+  --shadow:           0 4px 24px rgba(0, 0, 0, 0.4);
+  --radius:           10px;
+  --radius-sm:        6px;
+  --rain-opacity:     0.18;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg:               #f6f8fa;
+  --bg-elev:          #ffffff;
+  --bg-elev-2:        #f0f3f6;
+  --border:           #d0d7de;
+  --border-strong:    #afb8c1;
+  --text:             #1f2328;
+  --text-dim:         #59636e;
+  --text-faint:       #818b98;
+  --accent:           #00802a;
+  --accent-dim:       #036120;
+  --accent-bright:    #00a836;
+  --accent-glow:      rgba(0, 128, 42, 0.25);
+  --accent-bg-soft:   rgba(0, 128, 42, 0.08);
+  --shadow:           0 4px 18px rgba(140, 149, 159, 0.2);
+  --rain-opacity:     0.06;
+  color-scheme: light;
+}
+
+/* High-contrast a11y mode */
+[data-a11y="true"] {
+  --bg:             #000000;
+  --bg-elev:        #000000;
+  --bg-elev-2:      #0a0a0a;
+  --border:         #ffffff;
+  --border-strong:  #ffffff;
+  --text:           #ffffff;
+  --text-dim:       #ffffff;
+  --text-faint:     #cccccc;
+  --accent:         #ffff00;
+  --accent-dim:     #cccc00;
+  --accent-bright:  #ffff66;
+  --accent-glow:    transparent;
+  --accent-bg-soft: #333300;
+  --shadow:         none;
+}
+[data-a11y="true"][data-theme="light"] {
+  --bg:             #ffffff;
+  --bg-elev:        #ffffff;
+  --bg-elev-2:      #f5f5f5;
+  --border:         #000000;
+  --border-strong:  #000000;
+  --text:           #000000;
+  --text-dim:       #000000;
+  --text-faint:     #333333;
+  --accent:         #b35c00;
+  --accent-dim:     #804200;
+  --accent-bright:  #cc6f00;
+  --accent-glow:    transparent;
+  --accent-bg-soft: #fff2e0;
+}

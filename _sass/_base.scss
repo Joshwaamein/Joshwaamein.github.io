@@ -1,0 +1,100 @@
+/* =====================================================================
+   Reset, base typography
+   ===================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+[data-a11y="true"] body { font-size: 18px; line-height: 1.7; }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: 150ms ease;
+}
+a:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 8px var(--accent-glow);
+}
+[data-a11y="true"] a { text-decoration: underline; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+}
+
+::selection { background: var(--accent); color: var(--bg); }
+*:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+img { max-width: 100%; height: auto; }
+
+code, kbd, samp, pre {
+  font-family: 'JetBrains Mono', ui-monospace, "SFMono-Regular", monospace;
+}
+
+p, ul, ol { margin: 0 0 1rem; }
+ul, ol { padding-left: 1.4rem; }
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+blockquote {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-bg-soft);
+  color: var(--text-dim);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+th, td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+th {
+  background: var(--bg-elev-2);
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+tr:nth-child(even) td { background: rgba(255, 255, 255, 0.02); }
+[data-theme="light"] tr:nth-child(even) td { background: rgba(0, 0, 0, 0.02); }
+
+/* Matrix rain canvas — styled here so it sits behind everything else */
+#matrix-rain {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--rain-opacity);
+  transition: opacity 300ms ease;
+}
+[data-rain="off"] #matrix-rain,
+[data-a11y="true"] #matrix-rain { opacity: 0 !important; }
+@media (prefers-reduced-motion: reduce) { #matrix-rain { opacity: 0; } }

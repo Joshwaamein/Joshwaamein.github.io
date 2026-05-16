@@ -1,13 +1,23 @@
+# Jekyll build output
 _site/
-.sass-cache/
 .jekyll-cache/
 .jekyll-metadata
-Gemfile.lock
-*.gem
-node_modules/
-package.json
-package-lock.json
-convert.js
-*.log
-.bundle/
+.sass-cache/
+
+# Bundler
 vendor/
+.bundle/
+Gemfile.lock
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

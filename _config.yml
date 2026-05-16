@@ -1,86 +1,70 @@
-theme: jekyll-theme-chirpy
-
-lang: en
-
-timezone: Europe/London
+# =====================================================================
+# Joshua Mein blog — custom Jekyll site (no external theme)
+# =====================================================================
 
 title: Joshua Mein
 tagline: Building, Breaking & Automating Things
 description: >-
   A tech blog covering homelab setups, Linux administration, DevOps,
   cloud computing, networking, security, and IoT projects.
-
+author: Joshua Mein
 url: "https://joshwaamein.github.io"
 baseurl: ""
+lang: en
+timezone: Europe/London
 
-github:
-  username: Joshwaamein
+# Social / SEO
+github_username: Joshwaamein
+linkedin_username: josh-mein
+portfolio_url: "https://joshwaamein.github.io/portfolio-site/"
 
-social:
-  name: Joshua Mein
-  email: ""
-  links:
-    - https://github.com/Joshwaamein
-    - https://www.linkedin.com/in/joshuamein/
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-archives
+# Note: jekyll-paginate-v1 has destination conflicts when paginate_path
+# overlaps with the source index.html. We do simple "show all 33 posts"
+# on the home page instead — keeps things simple and still fast.
 
-# Site verification (optional)
-# google_site_verification:
+# jekyll-archives
+jekyll-archives:
+  enabled: [categories, tags]
+  layouts:
+    category: category
+    tag:      tag
+  permalinks:
+    category: /categories/:name/
+    tag:      /tags/:name/
 
-# Analytics (optional)
-# google_analytics:
-#   id:
+# Permalinks
+permalink: /posts/:slug/
 
-theme_mode: dark
-
-# Avatar image
-avatar: "/assets/img/avatar.jpg"
-
-# Social preview image
-# img_cdn:
-
-toc: true
-
-comments:
-  provider: false
-
-# Self-hosted static assets.
-#
-# IMPORTANT: leave this disabled (or unset). The Chirpy gem-based theme
-# only ships the assets/lib/* directory tree when you've installed the
-# theme via the starter template (jekyll-theme-chirpy-starter), which
-# runs a `npm run build` step that copies node_modules into _site.
-#
-# This site uses the gem (`gem "jekyll-theme-chirpy"`), so /assets/lib/*
-# does not exist in the built site. Setting self_host.enabled = true
-# makes Chirpy emit <script src="/assets/lib/..."> tags which all 404,
-# breaking site search and silently swallowing the input/cancel/trigger
-# event listeners (because the script throws a ReferenceError on dayjs
-# before it gets a chance to wire them up).
-#
-# Leaving self_host disabled makes Chirpy emit a single combined
-# jsdelivr <script> bundle with simple-jekyll-search, dayjs, the
-# loading-attribute polyfill, etc. — all of which are required for the
-# search box and the lazy-load handling to work.
-assets:
-  self_host:
-    enabled: false
-
-kramdown:
-  input: GFM
-  syntax_highlighter: rouge
-  syntax_highlighter_opts:
-    css_class: highlight
-    span:
-      line_numbers: false
-    block:
-      line_numbers: true
-      start_line: 1
-
+# Collections — _tabs holds the top-nav pages (about, archives, categories, tags)
 collections:
   tabs:
     output: true
     sort_by: order
 
+# Markdown
+markdown: kramdown
+kramdown:
+  syntax_highlighter: rouge
+  toc_levels: 2..3
+
+# Build
+exclude:
+  - vendor/
+  - node_modules/
+  - Gemfile*
+  - "*.log"
+  - .github/
+  - README.md
+  - CHANGELOG.md
+  - LICENSE
+
+# Frontmatter defaults
 defaults:
   - scope:
       path: ""
@@ -88,54 +72,13 @@ defaults:
     values:
       layout: post
       comments: false
-      toc: true
-      permalink: /posts/:title/
   - scope:
-      path: _tabs
+      path: ""
+      type: pages
+    values:
+      layout: page
+  - scope:
+      path: ""
       type: tabs
     values:
       layout: page
-      permalink: /:title/
-
-sass:
-  style: compressed
-
-compress_html:
-  clippings: all
-  comments: all
-  endings: all
-  profile: false
-  blanklines: false
-  ignore:
-    envs: [development]
-
-exclude:
-  - "*.gem"
-  - "*.gemspec"
-  - docs
-  - tools
-  - README.md
-  - LICENSE
-  - "*.config.js"
-  - package*.json
-  - node_modules
-  - convert.js
-
-jekyll-archives:
-  enabled: [categories, tags]
-  layouts:
-    category: category
-    tag: tag
-  permalinks:
-    tag: /tags/:name/
-    category: /categories/:name/
-
-paginate: 10
-paginate_path: "/page/:num/"
-
-plugins:
-  - jekyll-feed
-  - jekyll-seo-tag
-  - jekyll-sitemap
-  - jekyll-archives
-  - jekyll-paginate
