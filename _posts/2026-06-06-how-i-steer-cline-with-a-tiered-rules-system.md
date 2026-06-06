@@ -1,7 +1,7 @@
 ---
 title: "How I Steer Cline With a Tiered Rules System, a Persona, and a Pre-Commit Hook That Stops Me Leaking My Homelab"
 description: "A 700-line steering layer for Cline split into always-on rules and on-demand reference docs, a banned-words list that kills the AI smell, opsec rules that keep internal hostnames out of public commits, a single canonical config folder with five symlinks back into the OS, and a bash pre-commit hook that greps the staged diff for known secrets and refuses to let the commit through."
-date: 2026-06-06 22:00:00 +0100
+date: 2026-06-06 19:00:00 +0100
 categories: [AI, DevOps]
 tags: [cline, claude, llm, agents, mcp, ai, automation, opsec, bash]
 ---
