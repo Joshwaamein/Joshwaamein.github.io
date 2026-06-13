@@ -43,7 +43,7 @@ bundle exec jekyll serve --livereload
 ├── _layouts/             # default, home, page, post, archive, category, tag
 ├── _includes/            # head, header, nav, footer, post-card, pagination, toc
 ├── _sass/                # tokens, base, layout, components, post, syntax
-├── _posts/               # 33 blog posts (markdown)
+├── _posts/               # 36 blog posts (markdown)
 ├── _tabs/                # top-nav pages (about, archives, categories, tags)
 ├── assets/
 │   ├── css/main.scss     # imports the SCSS partials

@@ -21,3 +21,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local-only tooling and drafts (not part of the published site)
+docker-compose.yml
+social-posts/
+
