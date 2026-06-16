@@ -1,7 +1,7 @@
 ---
 title: "From One Agent to a Team: Async Loops, Multi-Agent Personas, and an Autonomy Envelope for Cline"
 description: "The next step after steering a single coding agent is letting it run unattended and splitting it into specialised personas. Here is the honest, safety-first version: a GREEN/AMBER/RED action envelope that defines what an agent may do with no human watching, a coordinator-plus-sub-agents architecture where each persona loads the narrowest rules and tools, and a pre-commit secret scan promoted to run in every repo by default. The thread running through all of it: separation of concerns cuts hallucination, and alert-and-stop beats force."
-date: 2026-06-16 19:00:00 +0100
+date: 2026-06-16 09:00:00 +0100
 categories: [AI, DevOps]
 tags: [cline, claude, llm, agents, multi-agent, automation, opsec, bash, self-hosting]
 ---
