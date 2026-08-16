@@ -279,3 +279,68 @@
   color: var(--accent);
   font-family: 'JetBrains Mono', monospace;
 }
+
+/* =====================================================================
+   View switcher: modern / terminal / 1998
+   Shared markup lives in _includes/view-switch.html so the set of modes
+   is defined once. Visual language deliberately matches .icon-btn.
+   ===================================================================== */
+
+.view-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-right: 0.35rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+}
+
+.view-switch-label {
+  color: var(--text-faint);
+  letter-spacing: 0.03em;
+}
+
+.view-chip {
+  display: inline-block;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  text-decoration: none;
+  line-height: 1;
+  transition: 150ms ease;
+}
+
+.view-chip:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+  text-decoration: none;
+  text-shadow: none;
+}
+
+/* The mode you are already in: rendered as a span, not a link. */
+.view-chip.active {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+  cursor: default;
+}
+
+[data-a11y='true'] .view-chip { text-decoration: underline; }
+
+/* Narrow viewports: the label is decoration, the chips are the point. */
+@media (max-width: 720px) {
+  .view-switch-label { display: none; }
+  .view-switch { gap: 0.2rem; margin-right: 0.2rem; }
+  .view-chip { padding: 0.28rem 0.38rem; font-size: 0.68rem; }
+}
+
+@media (max-width: 480px) {
+  /* Below this the header runs out of room, so drop to the two
+     destinations you cannot already see, and let the footer carry the
+     full set. */
+  .view-switch .view-chip.active { display: none; }
+}

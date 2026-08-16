@@ -1,0 +1,36 @@
+{%- comment -%}
+  View switcher, shared by all three presentations of the site.
+
+  One include, three consumers, so the set of modes lives in exactly one
+  place: add a fourth mode here and every page gains it. The retro page
+  cannot use this (it loads no site CSS by design), so it hand-rolls its
+  own period-styled version and this file stays the source of truth for
+  the modern + terminal pair.
+
+  `mode` is passed in by the caller: 'modern', 'terminal' or 'retro'.
+  The current mode renders as a non-link so you cannot click to where you
+  already are.
+{%- endcomment -%}
+{%- assign mode = include.mode | default: 'modern' -%}
+
+<div class="view-switch" role="group" aria-label="Choose a presentation of this site">
+  <span class="view-switch-label" aria-hidden="true">view:</span>
+
+  {%- if mode == 'modern' -%}
+  <span class="view-chip active" aria-current="true" title="You are here">modern</span>
+  {%- else -%}
+  <a class="view-chip" href="{{ '/' | relative_url }}" title="The normal site">modern</a>
+  {%- endif -%}
+
+  {%- if mode == 'terminal' -%}
+  <span class="view-chip active" aria-current="true" title="You are here">terminal</span>
+  {%- else -%}
+  <a class="view-chip" href="{{ '/terminal/' | relative_url }}" title="Browse by typing commands">terminal</a>
+  {%- endif -%}
+
+  {%- if mode == 'retro' -%}
+  <span class="view-chip active" aria-current="true" title="You are here">1998</span>
+  {%- else -%}
+  <a class="view-chip" href="{{ '/retro/' | relative_url }}" title="The same blog, as it would have looked in 1998">1998</a>
+  {%- endif -%}
+</div>

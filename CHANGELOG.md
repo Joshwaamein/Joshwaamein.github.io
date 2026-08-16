@@ -116,7 +116,106 @@ Single file containing ALL customisations:
 
 ---
 
+## Phase 6: Three View Modes (Terminal and 1998 Retro)
+
+Added two alternative presentations of the same content, plus a switcher
+to move between them. All three are generated from the same posts at build
+time: no runtime fetches, no database, no duplicated content.
+
+### `/terminal/`: a console for the blog
+
+A keyboard-driven route styled on the existing Matrix-green palette.
+Vanilla JS in the same idiom as `app.js` (IIFE, `var`, no arrow functions,
+no build step, no dependencies).
+
+**Commands:** `help`, `about`, `posts` (alias `ls`), `open <n>`,
+`cat <n|slug>`, `grep <term>`, `neofetch`, `skin <name>`, `whoami`,
+`sudo`, `clear`, `retro`, `modern`, `exit`.
+
+**Features:** command history (up/down, preserves a half-typed draft), tab
+completion for commands, post slugs and skin names, "did you mean"
+suggestions via Levenshtein distance, a boot sequence that plays once per
+browser, allowlisted `?cmd=` deep links, four colour skins
+(matrix/amber/paper/netscape) persisted to `localStorage`, and tap buttons
+so it is usable without a keyboard.
+
+**Post data** is embedded as JSON at build time rather than fetched, so it
+cannot go stale and needs no extra request. Titles, dates, slugs and
+90-word excerpts, roughly 31 KB for 37 posts. `grep` searches that same
+data, so full-text search costs 158 bytes of page weight.
+
+**Degrades:** `<noscript>` renders a plain linked list of every post, so
+the route is still usable with JavaScript disabled.
+
+### `/retro/`: the blog as it would have looked in 1998
+
+Table layout, `3px ridge` borders, Times New Roman, rainbow `<hr>` bars,
+colour-cycling status strip, hazard-tape "under construction" banner,
+four individually coloured sidebar boxes, six mismatched 88x31-style
+badges, a fictional web ring, and a green-on-black hit counter.
+
+Deliberately **standalone**: it loads none of the site's SCSS. The modern
+stylesheet sets Inter, link glows, transitions and rounded corners on
+`a`/`table`/`hr`/`body`, all of which a 1998 page needs the opposite of, so
+overriding them would have been more code than not loading them. Keeping
+them separate also means this page cannot regress the real site.
+
+No images were added: the tiled background, hazard tape and rainbow rules
+are all CSS gradients.
+
+`noindex` + `sitemap: false`, so a joke page does not compete with real
+content in search. A footer line states plainly that the counter and the
+web ring are decorative.
+
+### View switching
+
+- `_includes/view-switch.html` renders the three-way switcher and is
+  shared by the modern and terminal routes, so the set of modes is defined
+  once. The current mode renders as a non-link with `aria-current`.
+- Chips appear in the site header beside the existing theme/a11y/rain
+  buttons, styled to match `.icon-btn`.
+- `/retro/` hand-rolls a period-styled equivalent, since it loads no site
+  CSS.
+- Footer rewritten from a centre-dot link chain into a sentence.
+- Terminal gains `modern` and `retro` commands so the views are reachable
+  by typing.
+
+### Security and accessibility
+
+- **No `innerHTML` for post-derived data** in `terminal.js`; every line is
+  built with `textContent`/`createTextNode`.
+- Both novelty routes escape all interpolated values. This was found the
+  hard way: `| jsonify` alone does **not** escape `</script>`, so a post
+  titled `foo </script><img onerror=...>` terminated the JSON block and
+  injected live HTML. Fixed by escaping `<` to `\u003c` in the data block
+  and `| escape` on every HTML context, then re-verified with probe posts
+  carrying hostile titles and category names.
+- `hasOwnProperty` guards on all command/alias lookups, so typing
+  `constructor` cannot resolve an inherited `Object` member.
+- `grep` uses `indexOf`, not a `RegExp` built from user input, so there is
+  no catastrophic-backtracking surface.
+- Deep links are allowlisted against the real command table and never
+  `eval`'d; `?cmd=rm -rf /`, `?cmd=eval(1)` and path traversal are ignored.
+- Every animation (caret blink, boot sequence, colour cycling, 90s blink)
+  is gated behind `prefers-reduced-motion`.
+- `role="log"` + `aria-live` on terminal output, a visually hidden label
+  on the input, and a11y mode honoured throughout.
+
+### Testing
+
+A headless DOM harness exercises the terminal without a browser: **79
+assertions**, covering every command, bad input, aliases, history,
+completion, deep links, skins, the XSS cases and the prototype-pollution
+guards. Kept outside the repo so it does not ship.
+
+Also verified per build: all routes 200, post-count parity between the
+embedded JSON, the `<noscript>` list and `_posts/`, `node --check` on all
+JS, and a built-site diff to confirm only the intended files were added.
+
+---
+
 ## Files in Repository
+
 
 | File | Purpose |
 |------|---------|
@@ -126,9 +225,15 @@ Single file containing ALL customisations:
 | `_tabs/archives.md` | Archives tab configuration |
 | `_tabs/categories.md` | Categories tab configuration |
 | `_tabs/tags.md` | Tags tab configuration |
-| `_posts/*.md` | 22 blog posts in Markdown |
+| `_posts/*.md` | 37 blog posts in Markdown |
 | `assets/img/avatar.jpg` | Profile photo |
 | `.github/workflows/pages-deploy.yml` | GitHub Actions build/deploy workflow |
+| `terminal.html` | `/terminal/` console route (embedded post JSON + noscript fallback) |
+| `retro.html` | `/retro/` 1998 route, self-contained CSS |
+| `_layouts/terminal.html` | Full-bleed layout for the console route |
+| `_includes/view-switch.html` | Shared modern/terminal/1998 switcher |
+| `_sass/_terminal.scss` | Console styling + the four colour skins |
+| `assets/js/terminal.js` | Terminal command loop (vanilla, no deps) |
 | `Gemfile` | Ruby gem dependencies |
 | `index.html` | Homepage (Chirpy home layout) |
 | `README.md` | Repository documentation |
@@ -139,3 +244,7 @@ Single file containing ALL customisations:
 ## Build Date
 
 Initial build completed: **24-25 March 2026**
+
+Rebuilt from scratch as a custom Jekyll theme: **May 2026**
+
+Three view modes (terminal + 1998 retro) added: **16 August 2026**

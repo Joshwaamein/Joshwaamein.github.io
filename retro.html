@@ -1,0 +1,530 @@
+---
+layout: null
+permalink: /retro/
+sitemap: false
+---
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!--
+  /retro: the blog as it would have looked in 1998.
+
+  Deliberately standalone: this page does NOT load assets/css/main.css.
+  The modern stylesheet sets Inter, transitions, glows and rounded corners
+  on a/table/hr/body, which would fight every line of this aesthetic.
+  Overriding all of it would be more code than simply not loading it, and
+  keeping them separate means this page cannot regress the real site.
+
+  Same rules as the terminal page, though:
+  - all post data comes from Liquid at build time (no runtime fetch)
+  - every interpolated value is `| escape`d, because a post title
+    containing a tag would otherwise inject live HTML (that actually
+    happened on the terminal page; see the comment in terminal.html)
+  - no JavaScript required for anything load-bearing
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>{{ site.title | escape }}'s Home Page</title>
+<meta name="description" content="The {{ site.title | escape }} blog, rendered as it would have looked in 1998.">
+<meta name="author" content="{{ site.author | escape }}">
+<meta name="generator" content="Notepad">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" type="image/svg+xml" href="{{ '/assets/img/favicon.svg' | relative_url }}">
+<style type="text/css">
+/* ---------------------------------------------------------------
+   Everything below is intentionally period-appropriate: system
+   fonts, table layout, beveled borders, no flexbox, no grid.
+   --------------------------------------------------------------- */
+
+body {
+  background-color: #000080;
+  color: #000000;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 12px;
+  /* Tiled background drawn in CSS rather than shipping a GIF: diagonal
+     stripes over a purple-to-navy wash, which is about as 1998 as it gets. */
+  background-image:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,0.06) 0px,
+      rgba(255,255,255,0.06) 2px,
+      transparent 2px,
+      transparent 9px),
+    repeating-linear-gradient(-45deg,
+      rgba(255,0,255,0.05) 0px,
+      rgba(255,0,255,0.05) 2px,
+      transparent 2px,
+      transparent 14px),
+    linear-gradient(160deg, #2a0a5e 0%, #000080 45%, #00104d 100%);
+  background-attachment: fixed;
+}
+
+table.frame {
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+  background-color: #c0c0c0;
+  border: 3px ridge #dfdfdf;
+}
+
+td.pane { padding: 14px 18px; vertical-align: top; }
+
+/* --- header --- */
+
+.banner {
+  background-color: #000080;
+  background-image: linear-gradient(180deg, #000080 0%, #2000a0 55%, #6000c0 100%);
+  color: #ffff00;
+  text-align: center;
+  padding: 10px 6px;
+  border: 2px inset #808080;
+}
+.banner h1 {
+  font-size: 30px;
+  margin: 0 0 4px;
+  /* The 1998 dream: a rainbow WordArt heading. */
+  background-image: linear-gradient(90deg,
+    #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #ff00ff, #ff0000);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: #ffff00;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+/* Browsers without background-clip:text still get solid yellow. */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .banner h1 { -webkit-text-fill-color: #ffff00; color: #ffff00; }
+}
+.banner .sub { color: #00ffff; font-size: 14px; font-style: italic; }
+
+.marquee-ish {
+  background-color: #000000;
+  color: #00ff00;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid #404040;
+  text-align: center;
+  overflow: hidden;
+}
+.marquee-ish .star { color: #ffff00; }
+.marquee-ish .hot { color: #ff00ff; font-weight: bold; }
+/* Cycle the text colour like a <font> tag rotation. Motion-gated. */
+@media (prefers-reduced-motion: no-preference) {
+  .marquee-ish { animation: cycle90s 6s linear infinite; }
+}
+@keyframes cycle90s {
+  0%   { color: #00ff00; }
+  25%  { color: #00ffff; }
+  50%  { color: #ffff00; }
+  75%  { color: #ff00ff; }
+  100% { color: #00ff00; }
+}
+
+/* --- nav --- */
+
+.navbar {
+  background-color: #808080;
+  background-image: linear-gradient(180deg, #a0a0a0 0%, #707070 100%);
+  padding: 6px 8px;
+  text-align: center;
+  border: 2px inset #c0c0c0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+}
+.navbar a { color: #ffff00; font-weight: bold; }
+.navbar a:visited { color: #ffd0ff; }
+.navbar a:hover { color: #00ffff; background-color: #000080; }
+.navbar .sep { color: #00ff00; }
+
+/* --- links, the 1998 way --- */
+
+a { color: #0000ee; text-decoration: underline; }
+a:visited { color: #551a8b; }
+a:active { color: #ff0000; }
+
+/* --- content --- */
+
+h2 {
+  font-size: 20px;
+  color: #ffffff;
+  background-image: linear-gradient(90deg, #000080 0%, #4040c0 60%, #8080e0 100%);
+  border: 1px outset #c0c0c0;
+  border-bottom: 2px solid #ffff00;
+  margin: 18px 0 8px;
+  padding: 3px 8px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+h2 .dingbat { color: #ffff00; }
+
+/* The rainbow divider. Compulsory in 1998. */
+hr.rainbow {
+  border: none;
+  height: 6px;
+  margin: 14px 0;
+  background-image: linear-gradient(90deg,
+    #ff0000 0%, #ff8000 16%, #ffff00 33%,
+    #00ff00 50%, #00ffff 66%, #0000ff 83%, #ff00ff 100%);
+}
+
+.new {
+  color: #ff0000;
+  font-weight: bold;
+  font-size: 11px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+table.posts { width: 100%; border-collapse: collapse; margin: 6px 0 0; }
+table.posts td {
+  padding: 4px 6px;
+  border-bottom: 1px dotted #808080;
+  font-size: 15px;
+  vertical-align: top;
+}
+table.posts td.date {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 13px;
+  color: #008000;
+  font-weight: bold;
+  white-space: nowrap;
+  width: 90px;
+}
+/* Zebra striping, in colour, because greyscale is for 2003. */
+table.posts tr:nth-child(odd) td { background-color: #e8e8f8; }
+table.posts tr:nth-child(even) td { background-color: #f8f0e8; }
+table.posts tr:hover td { background-color: #ffff99; }
+table.posts td .bullet { color: #ff00ff; font-weight: bold; }
+
+.sidebar {
+  background-color: #d4d0c8;
+  border: 2px inset #ffffff;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.sidebar h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #ffffff;
+  background-color: #000080;
+  border: 1px outset #c0c0c0;
+  padding: 2px 5px;
+}
+.sidebar ul { margin: 0; padding-left: 18px; }
+.sidebar li { margin-bottom: 3px; }
+
+/* Each box gets its own colour, exactly as taste did not demand. */
+.sidebar.box-menu { background-color: #e0e8ff; }
+.sidebar.box-menu h3 { background-color: #000080; }
+
+.sidebar.box-cats { background-color: #ffe8f0; }
+.sidebar.box-cats h3 { background-color: #a00060; }
+.sidebar.box-cats .count { color: #a00060; font-weight: bold; }
+
+.sidebar.box-badges { background-color: #e8ffe8; }
+.sidebar.box-badges h3 { background-color: #006000; }
+
+.sidebar.box-ring { background-color: #fffbe0; }
+.sidebar.box-ring h3 { background-color: #b06000; }
+.sidebar.box-ring .ring-nav { text-align: center; font-weight: bold; }
+.sidebar.box-ring .ring-nav a { color: #b06000; }
+
+/* --- footer --- */
+
+.footer-90s {
+  text-align: center;
+  font-size: 12px;
+  font-family: Arial, Helvetica, sans-serif;
+  border-top: 2px groove #808080;
+  padding-top: 10px;
+  margin-top: 6px;
+}
+
+.counter {
+  display: inline-block;
+  background-color: #000000;
+  color: #00ff00;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 15px;
+  letter-spacing: 3px;
+  padding: 2px 7px;
+  border: 2px inset #808080;
+  text-shadow: 0 0 4px #00ff00;
+}
+
+.footer-90s .email { color: #0000ee; font-weight: bold; }
+.footer-90s .disclaimer { color: #505050; font-size: 11px; }
+
+/* --- view switcher, period edition ---
+   The shared _includes/view-switch.html cannot be used here: this page
+   loads no site CSS by design, so the chips are hand-rolled as 1998
+   beveled buttons instead. Same three destinations, same active state. */
+
+.view-switch-90s {
+  background-color: #000000;
+  border: 2px inset #808080;
+  padding: 5px 8px;
+  margin: 0 0 10px;
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+}
+.view-switch-90s .vs-label {
+  color: #00ff00;
+  font-family: "Courier New", Courier, monospace;
+  margin-right: 4px;
+}
+.view-switch-90s a,
+.view-switch-90s span.vs-here {
+  display: inline-block;
+  padding: 2px 8px;
+  margin: 0 2px;
+  border: 2px outset #dfdfdf;
+  background-color: #c0c0c0;
+  color: #000080;
+  font-weight: bold;
+  text-decoration: none;
+}
+.view-switch-90s a:visited { color: #000080; }
+.view-switch-90s a:hover {
+  border-style: inset;
+  background-color: #ffff00;
+  color: #ff0000;
+}
+.view-switch-90s span.vs-here {
+  background-color: #000080;
+  color: #ffff00;
+  border-style: inset;
+}
+
+.badge {
+  display: inline-block;
+  border: 1px outset #ffffff;
+  background-color: #c0c0c0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 5px;
+  margin: 2px;
+}
+/* Real 88x31 buttons were never the same colour twice. */
+.badge.b1 { background-color: #000080; color: #ffff00; }
+.badge.b2 { background-color: #800000; color: #ffffff; }
+.badge.b3 { background-color: #008000; color: #ffff00; }
+.badge.b4 { background-color: #ff00ff; color: #ffffff; }
+.badge.b5 { background-color: #00ffff; color: #000080; }
+.badge.b6 { background-color: #ffff00; color: #ff0000; }
+
+.underconstruction {
+  background-color: #ffff00;
+  background-image: repeating-linear-gradient(45deg,
+    #ffff00 0px, #ffff00 12px, #000000 12px, #000000 16px,
+    #ffff00 16px, #ffff00 28px, #ff0000 28px, #ff0000 32px);
+  border: 3px ridge #ff8000;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 0;
+  text-align: center;
+  margin: 10px 0;
+}
+/* Hazard-tape border with a readable label floated on top of it. */
+.underconstruction span {
+  display: inline-block;
+  background-color: #ffff00;
+  color: #ff0000;
+  padding: 5px 10px;
+  margin: 5px;
+  border: 1px solid #000000;
+}
+
+/* Blink, but only where the visitor has not asked for calm. */
+.blink { font-weight: bold; color: #ff0000; }
+@media (prefers-reduced-motion: no-preference) {
+  .blink { animation: blink90s 1.2s step-end infinite; }
+}
+@keyframes blink90s {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Small screens did not exist in 1998, but visitors on phones do. */
+@media (max-width: 620px) {
+  body { padding: 4px; }
+  td.pane { padding: 8px; }
+  .banner h1 { font-size: 22px; }
+  table.posts td.date { width: auto; font-size: 11px; }
+  .sidebar { margin-top: 12px; }
+}
+</style>
+</head>
+<body>
+
+<table class="frame" cellspacing="0" cellpadding="0">
+<tr><td class="pane">
+
+  <div class="view-switch-90s">
+    <span class="vs-label">VIEW:</span>
+    <a href="{{ '/' | relative_url }}">Modern</a>
+    <a href="{{ '/terminal/' | relative_url }}">Terminal</a>
+    <span class="vs-here">1998</span>
+  </div>
+
+  <div class="banner">
+    <h1>{{ site.title | escape }}'s Home Page</h1>
+    <div class="sub">{{ site.tagline | escape }}</div>
+  </div>
+
+  <div class="marquee-ish">
+    &lt;&lt;&lt; Welcome to my corner of the World Wide Web
+    <span class="star">*</span>
+    Best viewed at 800x600
+    <span class="star">*</span>
+    <span class="hot">{{ site.posts | size }} documents online</span>
+    <span class="star">*</span>
+    Please sign my guestbook &gt;&gt;&gt;
+  </div>
+
+  <div class="navbar">
+    <a href="#whatsnew">What's New</a> <span class="sep">&nbsp;|&nbsp;</span>
+    <a href="#about">About Me</a> <span class="sep">&nbsp;|&nbsp;</span>
+    <a href="#archive">Archive</a> <span class="sep">&nbsp;|&nbsp;</span>
+    <a href="{{ '/terminal/' | relative_url }}">Terminal</a> <span class="sep">&nbsp;|&nbsp;</span>
+    <a href="{{ '/' | relative_url }}">Modern Site</a>
+  </div>
+
+  <div class="underconstruction">
+    <span>[!] THIS PAGE IS UNDER CONSTRUCTION [!] Check back often!</span>
+  </div>
+
+  <hr class="rainbow">
+
+  <table width="100%" cellspacing="0" cellpadding="0"><tr>
+  <td width="68%" valign="top" style="padding-right:14px;">
+
+    <a name="whatsnew"></a>
+    <h2><span class="dingbat">&#9658;</span> What's New</h2>
+    <p>
+      Hello and welcome to my home page! I write about homelab hardware,
+      Linux, networking and automation. <span class="new">NEW!</span>
+      There are now <b>{{ site.posts | size }}</b> articles archived below.
+    </p>
+
+    <table class="posts" cellspacing="0" cellpadding="0">
+      {%- for post in site.posts limit: 8 -%}
+      <tr>
+        <td class="date">{{ post.date | date: "%d %b %y" }}</td>
+        <td>
+          <a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
+          {%- if forloop.first %} <span class="new">&lt;-- NEW!</span>{% endif -%}
+        </td>
+      </tr>
+      {%- endfor -%}
+    </table>
+
+    <a name="about"></a>
+    <h2><span class="dingbat">&#9658;</span> About Me</h2>
+    <p>
+      I am a cloud infrastructure and systems engineer. This site is put
+      together by hand, with no databases and no trackers, which was normal
+      in 1998 and is apparently a feature again now.
+    </p>
+    <p>
+      My code lives at
+      <a href="https://github.com/{{ site.github_username | escape }}">github.com/{{ site.github_username | escape }}</a>.
+    </p>
+
+    <a name="archive"></a>
+    <h2><span class="dingbat">&#9658;</span> Complete Archive</h2>
+    <table class="posts" cellspacing="0" cellpadding="0">
+      {%- for post in site.posts -%}
+      <tr>
+        <td class="date">{{ post.date | date: "%Y-%m-%d" }}</td>
+        <td><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></td>
+      </tr>
+      {%- endfor -%}
+    </table>
+
+  </td>
+  <td width="32%" valign="top">
+
+    <div class="sidebar box-menu">
+      <h3>Site Menu</h3>
+      <ul>
+        <li><a href="{{ '/' | relative_url }}">Modern version</a></li>
+        <li><a href="{{ '/terminal/' | relative_url }}">Terminal version</a></li>
+        <li><a href="{{ '/archives/' | relative_url }}">Archives</a></li>
+        <li><a href="{{ '/categories/' | relative_url }}">Categories</a></li>
+        <li><a href="{{ '/tags/' | relative_url }}">Tags</a></li>
+        <li><a href="{{ '/feed.xml' | relative_url }}">RSS Feed</a></li>
+      </ul>
+    </div>
+
+    <br>
+
+    <div class="sidebar box-cats">
+      <h3>Categories</h3>
+      <ul>
+        {%- for cat in site.categories limit: 8 -%}
+        <li>{{ cat[0] | escape }} <span class="count">({{ cat[1] | size }})</span></li>
+        {%- endfor -%}
+      </ul>
+    </div>
+
+    <br>
+
+    <div class="sidebar box-badges">
+      <h3>This Site Is</h3>
+      <p style="margin:0;">
+        <span class="badge b1">HTML 3.2</span>
+        <span class="badge b2">CSS 1</span>
+        <span class="badge b3">NO JAVA</span>
+        <span class="badge b4">800x600</span>
+        <span class="badge b5">LYNX OK</span>
+        <span class="badge b6">NO COOKIES</span>
+      </p>
+    </div>
+
+    <br>
+
+    <div class="sidebar box-ring">
+      <h3>Homelab Web Ring</h3>
+      <p style="margin:0 0 6px;">
+        This site is member #{{ site.posts | size }} of a web ring
+        that does not exist.
+      </p>
+      <p class="ring-nav" style="margin:0;">
+        <a href="{{ '/retro/' | relative_url }}">[ &lt;&lt; Prev ]</a>
+        <a href="{{ '/' | relative_url }}">[ Random ]</a>
+        <a href="{{ '/retro/' | relative_url }}">[ Next &gt;&gt; ]</a>
+      </p>
+    </div>
+
+  </td>
+  </tr></table>
+
+  <hr class="rainbow">
+
+  <div class="footer-90s">
+    <p>
+      You are visitor number
+      <span class="counter">00013375</span><br>
+      <span class="blink">*</span>
+      Last updated {{ site.time | date: "%d %B %Y" }}
+      <span class="blink">*</span>
+    </p>
+    <p>
+      &copy; {{ site.time | date: '%Y' }} {{ site.author | escape }} &nbsp;|&nbsp;
+      <a class="email" href="{{ '/' | relative_url }}">Back to the modern site</a>
+    </p>
+    <p class="disclaimer">
+      This page is a joke about 1998, not actually from 1998.
+      The visitor counter and the web ring are decorative.
+    </p>
+  </div>
+
+</td></tr>
+</table>
+
+</body>
+</html>

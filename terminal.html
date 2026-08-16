@@ -1,0 +1,119 @@
+---
+layout: terminal
+title: Terminal
+permalink: /terminal/
+description: A terminal-style console for browsing this blog. Type help to begin.
+---
+
+{%- comment -%}
+  Post index, rendered once at build time. Read by assets/js/terminal.js.
+
+  Why embedded rather than a fetched JSON file: Jekyll already has this
+  data at build time, so a runtime fetch would add a round-trip, an extra
+  file, and a new failure mode (offline / 404) for no gain. It also cannot
+  go stale, because it is regenerated on every build.
+
+  ESCAPING, do not simplify this:
+  `| jsonify` alone is NOT enough. It escapes quotes and backslashes for
+  JSON, but it does not touch `</script>`, and the HTML parser closes this
+  block at the first literal `</script>` it sees, no matter that we are
+  inside a JSON string. A post titled `foo </script><img onerror=...>`
+  would therefore terminate the data block and inject live HTML.
+  Verified 2026-08-16 with a probe post: it really does happen.
+
+  So every value is `jsonify`'d for JSON correctness and then has `<`
+  replaced, which makes a literal `</script>` unrepresentable while
+  leaving the JSON valid. terminal.js reverses nothing: it renders these
+  strings with textContent, so `\u003c` arrives as a plain "<" character
+  on screen.
+
+  Do NOT change the script type either: `application/json` means the
+  browser parses this as data and never executes it.
+{%- endcomment -%}
+{%- assign lt = '\u003c' -%}
+<script id="terminal-data" type="application/json">
+  {
+    "site": {
+      "title": {{ site.title | jsonify | replace: '<', lt }},
+      "tagline": {{ site.tagline | jsonify | replace: '<', lt }},
+      "github": {{ site.github_username | jsonify | replace: '<', lt }},
+      "home": {{ "/" | relative_url | jsonify }},
+      "retro": {{ "/retro/" | relative_url | jsonify }}
+    },
+    "posts": [
+      {%- for post in site.posts -%}
+      {
+        "title": {{ post.title | jsonify | replace: '<', lt }},
+        "url": {{ post.url | relative_url | jsonify }},
+        "date": {{ post.date | date: "%Y-%m-%d" | jsonify }},
+        "slug": {{ post.slug | jsonify | replace: '<', lt }},
+        "excerpt": {{ post.content | strip_html | normalize_whitespace | truncatewords: 90 | jsonify | replace: '<', lt }}
+      }{%- unless forloop.last -%},{%- endunless -%}
+      {%- endfor -%}
+    ]
+  }
+</script>
+
+
+<div class="term-shell">
+  {%- include view-switch.html mode='terminal' -%}
+
+  <div class="term" id="term">
+  <div class="term-bar" aria-hidden="true">
+    <span class="term-dot term-dot--red"></span>
+    <span class="term-dot term-dot--amber"></span>
+    <span class="term-dot term-dot--green"></span>
+    <span class="term-bar-title">{{ site.title | downcase | replace: " ", "" | escape }}@blog: ~</span>
+  </div>
+
+  <div class="term-body">
+    <div class="term-out" id="term-out" role="log" aria-live="polite" aria-relevant="additions"></div>
+
+    <form class="term-form" id="term-form" autocomplete="off">
+      <label class="term-label" for="term-in">Terminal command</label>
+      <span class="term-ps1" aria-hidden="true">visitor@blog:~$</span>
+      <input class="term-in" id="term-in" type="text" name="cmd"
+             autocomplete="off" autocapitalize="off" autocorrect="off"
+             spellcheck="false" enterkeyhint="send">
+      <span class="term-caret" id="term-caret" aria-hidden="true"></span>
+    </form>
+
+    <div class="term-taps" id="term-taps">
+      <span class="term-taps-hint">tap to type, or:</span>
+      <button type="button" class="term-tap" data-cmd="help">help</button>
+      <button type="button" class="term-tap" data-cmd="posts">posts</button>
+      <button type="button" class="term-tap" data-cmd="cat 1">cat 1</button>
+      <button type="button" class="term-tap" data-cmd="neofetch">neofetch</button>
+      <button type="button" class="term-tap" data-cmd="skin">skin</button>
+      <button type="button" class="term-tap" data-cmd="exit">exit</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<noscript>
+  <div class="term-noscript">
+    <h1>Terminal</h1>
+    <p>
+      This page is a JavaScript toy: a small console for browsing the blog
+      by typing commands. It needs JavaScript, which is off in your
+      browser, so here is the same thing as an ordinary list.
+    </p>
+    <p><a href="{{ '/' | relative_url }}">&larr; Back to the site</a></p>
+
+    <h2>All posts</h2>
+    <ul>
+      {%- comment -%}
+        `| escape` is required here, not decoration: without it a post
+        title containing a tag is emitted as live HTML inside this list.
+        Same probe that caught the JSON block caught this one too.
+      {%- endcomment -%}
+      {%- for post in site.posts -%}
+      <li>
+        <a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
+        <small>{{ post.date | date: "%Y-%m-%d" }}</small>
+      </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+</noscript>

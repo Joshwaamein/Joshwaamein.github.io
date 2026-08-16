@@ -9,6 +9,10 @@ Every line of HTML, SCSS, and JS lives in this repo (no third-party theme, no Bo
 ## Features
 
 - Vanilla Jekyll 4 with custom layouts/includes/SCSS — no theme dependency
+- **Three ways to read the site**, switchable from the header of any page:
+  - `/` (the normal blog)
+  - `/terminal/` is a keyboard-driven console (`help`, `posts`, `open <n>`, `cat`, `grep`, `skin`, …)
+  - `/retro/` is the same content as a 1998 home page, complete with visitor counter
 - Matrix-green / GitHub-dark palette + light + WCAG high-contrast a11y mode
 - Toggleable Matrix-rain canvas background (respects `prefers-reduced-motion`)
 - Header toggles for theme / a11y / rain (no-flash localStorage init)
@@ -16,6 +20,25 @@ Every line of HTML, SCSS, and JS lives in this repo (no third-party theme, no Bo
 - Categories index + per-category pages, tag cloud + per-tag pages, year-grouped archive
 - Pagination, prev/next post navigation, RSS feed
 - GitHub Pages deploy via existing GitHub Actions workflow (Ruby 3.3)
+
+## The three view modes
+
+All three are generated from the same posts at build time. No runtime
+fetches, no database, no JavaScript required for the normal site or the
+retro page.
+
+| Route | What it is | Needs JS |
+|---|---|---|
+| `/` | The standard blog | No |
+| `/terminal/` | A console: type `help` to start. Command history, tab completion, post search via `grep`, four colour skins, and a boot sequence that plays once per browser | Yes (falls back to a plain post list) |
+| `/retro/` | A period-accurate 1998 home page: table layout, beveled borders, rainbow rules, hit counter. Standalone CSS, loads none of the modern stylesheet | No |
+
+The terminal deliberately avoids `innerHTML` for anything derived from post
+data, and both novelty routes escape every interpolated value: a post title
+containing a `<script>` tag renders as visible text rather than executing.
+`/retro/` is `noindex` and excluded from the sitemap so it does not compete
+with the real content in search results.
+
 
 ## Local development
 
@@ -40,14 +63,17 @@ bundle exec jekyll serve --livereload
 .
 ├── _config.yml           # site metadata, plugins, permalinks
 ├── Gemfile               # jekyll + plugins
-├── _layouts/             # default, home, page, post, archive, category, tag
-├── _includes/            # head, header, nav, footer, post-card, pagination, toc
-├── _sass/                # tokens, base, layout, components, post, syntax
-├── _posts/               # 36 blog posts (markdown)
+├── _layouts/             # default, home, page, post, archive, category, tag, terminal
+├── _includes/            # head, header, nav, footer, post-card, pagination, toc, view-switch
+├── _sass/                # tokens, base, layout, components, post, syntax, terminal
+├── _posts/               # 37 blog posts (markdown)
 ├── _tabs/                # top-nav pages (about, archives, categories, tags)
+├── terminal.html         # /terminal/ console route
+├── retro.html            # /retro/ 1998 route (self-contained, own CSS)
 ├── assets/
 │   ├── css/main.scss     # imports the SCSS partials
 │   ├── js/app.js         # tab/theme/a11y/rain toggles
+│   ├── js/terminal.js    # the /terminal/ command loop (vanilla, no deps)
 │   ├── js/matrix-rain.js # canvas animation
 │   └── img/              # favicon and post images
 └── .github/workflows/    # GitHub Pages deployment

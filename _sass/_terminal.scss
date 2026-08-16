@@ -1,0 +1,326 @@
+/* =====================================================================
+ * /terminal console route styling.
+ * Uses existing tokens only (see _tokens.scss). No new colours.
+ * ===================================================================== */
+
+.body--terminal {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+/* The rain is on-brand but must not fight the text. */
+.body--terminal #matrix-rain { opacity: 0.25; }
+
+/* Wrapper so the shared view-switcher can sit above the console. */
+.term-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 900px;
+}
+
+.term-shell .view-switch {
+  margin: 0 0 0.55rem;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.term {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 900px;
+  background: rgba(13, 17, 23, 0.94); /* --bg at ~94% so rain shows through */
+  border: 1px solid var(--border-strong, var(--border));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* --- title bar --- */
+
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+}
+
+.term-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+.term-dot--red   { background: #ff5f57; }
+.term-dot--amber { background: #febc2e; }
+.term-dot--green { background: var(--accent); }
+
+.term-bar-title {
+  margin-left: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-faint, var(--text-dim));
+  letter-spacing: 0.02em;
+}
+
+/* --- body --- */
+
+.term-body { padding: 0.9rem 1rem 1rem; }
+
+.term-out {
+  max-height: 62vh;
+  overflow-y: auto;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.term-line { color: var(--text); }
+.term-line--dim { color: var(--text-dim); }
+.term-line--accent { color: var(--accent); font-weight: 600; }
+.term-line--err { color: #ff7b72; }
+.term-line--echo { color: var(--text); }
+
+/* post rows: fixed-width columns without a table */
+.term-line--post { display: flex; gap: 0.9rem; }
+.term-num   { color: var(--accent-dim, var(--accent)); flex: 0 0 2.2em; text-align: right; }
+.term-date  { color: var(--text-faint, var(--text-dim)); flex: 0 0 6.5em; }
+.term-title { color: var(--text); flex: 1 1 auto; }
+
+/* --- input row --- */
+
+.term-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.7rem;
+}
+
+/* Visually hidden but present for screen readers. */
+.term-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.term-ps1 {
+  color: var(--accent);
+  flex: 0 0 auto;
+  font-size: 0.88rem;
+}
+
+.term-in {
+  flex: 1 1 auto;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 0;
+  min-width: 0; /* lets it shrink inside flex on narrow screens */
+}
+
+.term-caret {
+  width: 8px;
+  height: 1.05em;
+  background: var(--accent);
+  flex: 0 0 auto;
+  animation: term-blink 1.1s step-end infinite;
+}
+
+@keyframes term-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* --- tap helpers (mobile / no keyboard) --- */
+
+.term-taps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.term-taps-hint {
+  font-size: 0.72rem;
+  color: var(--text-faint, var(--text-dim));
+  margin-right: 0.15rem;
+}
+
+.term-tap {
+  background: var(--bg-elev);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  padding: 0.28rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.term-tap:hover,
+.term-tap:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-bg-soft, var(--bg-elev));
+}
+
+/* --- grep results --- */
+
+.term-line--ctx {
+  color: var(--text-dim);
+  padding-left: 3.1em;
+  font-size: 0.82rem;
+}
+
+.term-ctx-ellipsis { color: var(--text-faint, var(--text-dim)); }
+
+.term-hit {
+  color: var(--bg);
+  background: var(--accent);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* --- neofetch card --- */
+
+.term-line--fetch { white-space: pre; }
+.term-art { color: var(--accent-dim, var(--accent)); }
+.term-fetch-key { color: var(--accent); font-weight: 600; }
+
+/* --- skins (terminal-scoped: never touches site-wide data-theme) --- */
+
+/* amber phosphor */
+.term[data-skin='amber'] {
+  --accent: #ffb000;
+  --accent-dim: #b37800;
+  --accent-bright: #ffc740;
+  --text: #ffcc66;
+  --text-dim: #b38a3d;
+  --text-faint: #806029;
+  background: rgba(20, 12, 0, 0.95);
+  border-color: #4d3300;
+
+  .term-bar { background: #1f1400; border-bottom-color: #4d3300; }
+  .term-dot--red { background: #b37800; }
+  .term-dot--amber { background: #ffb000; }
+  .term-dot--green { background: #ffcc66; }
+  .term-line { color: #ffcc66; }
+  .term-line--err { color: #ff8f3f; }
+  .term-in { color: #ffcc66; }
+}
+
+/* dark text on light: the "I want to read this" option */
+.term[data-skin='paper'] {
+  --accent: #0a7c2f;
+  --accent-dim: #6a737d;
+  --text: #24292f;
+  --text-dim: #57606a;
+  --text-faint: #8c959f;
+  background: rgba(250, 250, 247, 0.97);
+  border-color: #d0d7de;
+
+  .term-bar { background: #eff2f5; border-bottom-color: #d0d7de; }
+  .term-bar-title { color: #57606a; }
+  .term-line { color: #24292f; }
+  .term-line--dim { color: #57606a; }
+  .term-line--err { color: #b3261e; }
+  .term-in { color: #24292f; }
+  .term-hit { color: #fff; background: #0a7c2f; }
+  .term-tap { background: #fff; color: #0a7c2f; border-color: #d0d7de; }
+}
+
+/* 1997. Grey face, blue links, Times where it hurts. */
+.term[data-skin='netscape'] {
+  --accent: #000080;
+  --accent-dim: #666666;
+  --text: #000000;
+  --text-dim: #333333;
+  --text-faint: #666666;
+  background: #c0c0c0;
+  border: 2px outset #dfdfdf;
+  border-radius: 0;
+  box-shadow: none;
+  font-family: 'Times New Roman', Times, serif;
+
+  .term-bar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    border-bottom: 1px solid #808080;
+  }
+  .term-bar-title { color: #ffffff; font-weight: 700; }
+  .term-dot { border-radius: 0; border: 1px outset #dfdfdf; background: #c0c0c0; }
+  .term-dot--red, .term-dot--amber, .term-dot--green { background: #c0c0c0; }
+
+  .term-out, .term-in, .term-ps1 { font-family: 'Courier New', Courier, monospace; }
+  .term-line { color: #000000; }
+  .term-line--accent { color: #000080; }
+  .term-line--dim { color: #333333; }
+  .term-line--err { color: #cc0000; }
+  .term-line--post .term-title { color: #0000ee; text-decoration: underline; }
+  .term-hit { color: #000000; background: #ffff00; }
+
+  .term-form { border-top: 1px solid #808080; }
+  .term-caret { background: #000000; }
+  .term-tap {
+    background: #c0c0c0;
+    color: #000000;
+    border: 2px outset #dfdfdf;
+    border-radius: 0;
+    font-family: 'Times New Roman', Times, serif;
+  }
+  .term-tap:hover { border-style: inset; }
+}
+
+/* --- no-JS fallback --- */
+
+
+.term-noscript {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  ul { padding-left: 1.2rem; }
+  li { margin-bottom: 0.35rem; }
+  small { color: var(--text-dim); margin-left: 0.4rem; }
+}
+
+/* --- motion / a11y respect --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .term-caret { animation: none; }
+}
+
+[data-a11y='true'] .term-caret { animation: none; }
+
+/* --- small screens --- */
+
+@media (max-width: 600px) {
+  .body--terminal { padding: 0.5rem; align-items: flex-start; }
+  .term-out { max-height: 58vh; font-size: 0.82rem; }
+  .term-line--post { gap: 0.5rem; }
+  .term-date { display: none; } /* title matters more than the date here */
+}

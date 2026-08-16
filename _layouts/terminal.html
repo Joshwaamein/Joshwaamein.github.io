@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: 'en' }}">
+<head>
+  {%- include head.html -%}
+</head>
+<body class="body--terminal">
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+
+  {{ content }}
+
+  <script src="{{ '/assets/js/matrix-rain.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/app.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/terminal.js' | relative_url }}"></script>
+</body>
+</html>
