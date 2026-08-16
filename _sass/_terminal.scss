@@ -11,8 +11,10 @@
   padding: 1.25rem;
 }
 
-/* The rain is on-brand but must not fight the text. */
-.body--terminal #matrix-rain { opacity: 0.25; }
+/* The rain is on-brand but must not fight the console text. The site-wide
+   default is --rain-opacity: 0.18; going above that (an earlier 0.25 did)
+   makes this page noisier than every other page, which reads as broken. */
+.body--terminal #matrix-rain { opacity: 0.06; }
 
 /* Wrapper so the shared view-switcher can sit above the console. */
 .term-shell {
@@ -23,9 +25,23 @@
 }
 
 .term-shell .view-switch {
-  margin: 0 0 0.55rem;
+  /* Sit the switcher on the console like a browser tab strip rather than
+     floating detached above it: same width, joined edge, no bottom radius. */
+  display: flex;
   justify-content: flex-end;
   width: 100%;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  background: rgba(13, 17, 23, 0.94);
+  border: 1px solid var(--border-strong, var(--border));
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* With the strip attached, the console must not repeat the rounded top. */
+.term-shell .term {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .term {
