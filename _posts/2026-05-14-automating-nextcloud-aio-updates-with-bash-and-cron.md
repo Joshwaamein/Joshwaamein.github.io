@@ -68,10 +68,10 @@ sleep 60
 # Step 6: Force every child container to be recreated next start
 log "Step 6/7: Stopping and removing all AIO child containers..."
 set +e
-for c in $(docker ps     --filter "name=nextcloud-aio-" --format "{{.Names}}" | grep -v mastercontainer); do
+for c in $({% raw %}docker ps     --filter "name=nextcloud-aio-" --format "{{.Names}}"{% endraw %} | grep -v mastercontainer); do
     docker stop "$c"
 done
-for c in $(docker ps -a  --filter "name=nextcloud-aio-" --format "{{.Names}}" | grep -v mastercontainer); do
+for c in $({% raw %}docker ps -a  --filter "name=nextcloud-aio-" --format "{{.Names}}"{% endraw %} | grep -v mastercontainer); do
     docker rm   "$c"
 done
 set -e
