@@ -116,6 +116,97 @@ Single file containing ALL customisations:
 
 ---
 
+## Phase 7: Terminal as a Real Filesystem, and "1998" Renamed to "retro"
+
+Two changes after live review of Phase 6: the third mode's chip was renamed,
+and the terminal was rebuilt around a virtual filesystem because the flat
+`open <n>` / `cat <n>` model was a menu wearing a shell's clothes.
+
+### The `1998` chip is now `retro`
+
+Renamed in `_includes/view-switch.html` (modern + terminal pages),
+`retro.html` (which hand-rolls its own period-styled switcher and cannot use
+the shared include), the footer link, and the `retro` command's output. The
+chip now names a mode rather than a year. The page itself is still a joke
+about 1998 and says so.
+
+### The terminal is now a filesystem, not a list
+
+Posts are files. The tree is built at load time from the embedded post data:
+
+```
+~/
+|-- README.md          generated, explains the filesystem
+|-- about.md           generated
+|-- posts/             every post, one file: YYYY-MM-DD-slug.md
+|-- categories/<cat>/  the same files, grouped
+`-- tags/<tag>/        the same files, grouped
+```
+
+A post filed under three categories appears at several paths, deliberately,
+the way hardlinks show one file in several places. On the real blog that is
+37 posts, 8 category directories and 106 tag directories.
+
+**New commands.** Navigation: `ls [-l] [path]`, `cd`, `pwd`, `tree`.
+Reading: `cat <file>...` (multiple operands print `==>` headers),
+`head`/`tail [-n N]`, `less`, `open [file]`. Searching:
+`grep [-i] [-l] <string> [path]`, `find [path] -name <glob>`, `wc [-w|-l]`.
+System: `stat`, `file`, `du`, `man <cmd>`, `history`, `uname`, `date`, `env`,
+`echo`, `which`.
+
+**Path handling** is real: absolute (`/posts`, `~/posts`), relative (`posts`,
+`../tags`), `.`, `..`, `cd -` for the previous directory, bare `cd` for home,
+and trailing slashes. One `resolvePath()` owns the semantics so every command
+agrees. The prompt tracks the cwd (`visitor@blog:~/posts$`), and each echoed
+command keeps the prompt it was run from, so scrolling back shows where you
+were.
+
+**Tab completion** now completes paths, not just slugs: it splits the token
+into a directory part and a leaf, resolves the directory, and appends a `/`
+to directories so you can keep tabbing deeper. `man` and `which` complete
+against command names instead.
+
+**`ls -l`** renders as columns (mode, size, date, name, dimmed title) using
+the same flex-column approach as the existing post rows. Size is word count
+for posts and child count for directories, which is the closest honest
+analogue when the body on the page is an excerpt. Directories take the accent
+colour, which is what `ls --color` buys you in a real shell. On phones the
+mode and size columns are hidden rather than allowed to overflow.
+
+**Two security constraints, both tested:**
+
+- **No typed input reaches a RegExp.** `grep` matches with `indexOf`; `find`
+  walks its glob (`*`, `?`) character by character with backtracking. A
+  pattern like `(a+)+$` cannot hang the page.
+- **Path lookups go through `hasOwnProperty`.** A bare `children[name]` lookup
+  resolves inherited members, so `cd constructor` would otherwise "find"
+  something and blow up downstream. This is the same bug class that already
+  required guards on `COMMANDS` and `ALIASES` in Phase 6.
+
+**Three bugs found by testing the real page** rather than the stub harness:
+
+1. `find -name "*docker*"` matched nothing, because the argument keeps its
+   quotes when the line is split on whitespace. Operands are now unquoted the
+   way a shell would do it before the command sees them.
+2. `grep` from `~` never mentioned `posts/`: dedupe-by-URL kept whichever path
+   was walked first, and `categories` sorts before `posts`. The walk now
+   visits `posts/` first so the canonical path wins.
+3. `ls -l` on directories printed ten blank columns where the date goes, which
+   reads as a rendering fault. Directories now show a dash.
+
+**Retired:** `open <n>` and `cat <n>` (index addressing), and the `ls`→`posts`,
+`find`→`grep`, `man`→`help` aliases, since those are all real commands now.
+`posts` survives as a shortcut for `ls -l ~/posts` because it was in the tap
+bar and in muscle memory.
+
+**Tests:** the Phase 6 harness asserted the flat model, so it was replaced
+with a filesystem harness: **141 assertions, 0 failing**, covering tree
+construction, path resolution, every command, the prototype guards, hostile
+titles, completion, skins and navigation. Verified in a real browser at 1280,
+768 and 420 wide with no page errors and no horizontal overflow.
+
+---
+
 ## Phase 6: Three View Modes (Terminal and 1998 Retro)
 
 Added two alternative presentations of the same content, plus a switcher
@@ -231,7 +322,7 @@ JS, and a built-site diff to confirm only the intended files were added.
 | `terminal.html` | `/terminal/` console route (embedded post JSON + noscript fallback) |
 | `retro.html` | `/retro/` 1998 route, self-contained CSS |
 | `_layouts/terminal.html` | Full-bleed layout for the console route |
-| `_includes/view-switch.html` | Shared modern/terminal/1998 switcher |
+| `_includes/view-switch.html` | Shared modern/terminal/retro switcher |
 | `_sass/_terminal.scss` | Console styling + the four colour skins |
 | `assets/js/terminal.js` | Terminal command loop (vanilla, no deps) |
 | `Gemfile` | Ruby gem dependencies |
@@ -247,4 +338,5 @@ Initial build completed: **24-25 March 2026**
 
 Rebuilt from scratch as a custom Jekyll theme: **May 2026**
 
-Three view modes (terminal + 1998 retro) added: **16 August 2026**
+Three view modes (terminal + retro) added: **16 August 2026**
+Terminal rebuilt as a virtual filesystem, `1998` chip renamed `retro`: **16 August 2026**

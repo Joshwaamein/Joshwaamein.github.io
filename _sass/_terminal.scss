@@ -112,6 +112,47 @@
 .term-date  { color: var(--text-faint, var(--text-dim)); flex: 0 0 6.5em; }
 .term-title { color: var(--text); flex: 1 1 auto; }
 
+/* directory listings (ls, ls -l) and grep hits.
+   Same flex-column idea as .term-line--post: a real table would fight the
+   pre-wrap output area, and fixed em widths keep the columns aligned in a
+   monospace face without one. */
+.term-line--entry,
+.term-line--match { display: flex; gap: 0.75rem; }
+
+.term-mode {
+  color: var(--text-faint, var(--text-dim));
+  flex: 0 0 6.2em;
+}
+
+.term-size {
+  color: var(--text-dim);
+  flex: 0 0 3.2em;
+  text-align: right;
+}
+
+/* Directories take the accent so the tree reads at a glance, exactly what
+   ls --color buys you in a real shell. */
+.term-dirname {
+  color: var(--accent);
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+.term-filename { color: var(--text); flex: 0 0 auto; }
+
+/* The post title trailing an `ls -l` row is context, not the filename, so it
+   is dimmed and allowed to shrink first when the console is narrow. */
+.term-entry-title {
+  color: var(--text-dim);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.term-line--match .term-filename { color: var(--accent-dim, var(--accent)); }
+
 /* --- input row --- */
 
 .term-form {
@@ -292,6 +333,10 @@
   .term-line--dim { color: #333333; }
   .term-line--err { color: #cc0000; }
   .term-line--post .term-title { color: #0000ee; text-decoration: underline; }
+  /* Directory names read as links in this skin, matching how a 1997 index
+     page looked. The other entry columns inherit via the custom properties. */
+  .term-dirname { color: #0000ee; text-decoration: underline; }
+  .term-line--match .term-filename { color: #0000ee; }
   .term-hit { color: #000000; background: #ffff00; }
 
   .term-form { border-top: 1px solid #808080; }
@@ -338,5 +383,11 @@
   .body--terminal { padding: 0.5rem; align-items: flex-start; }
   .term-out { max-height: 58vh; font-size: 0.82rem; }
   .term-line--post { gap: 0.5rem; }
+  /* Long form has four columns; on a phone the mode and size are noise, so
+     drop them and keep the filename and title. */
+  .term-mode,
+  .term-size { display: none; }
+  .term-line--entry,
+  .term-line--match { gap: 0.5rem; flex-wrap: wrap; }
   .term-date { display: none; } /* title matters more than the date here */
 }

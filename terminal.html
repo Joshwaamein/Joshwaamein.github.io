@@ -2,7 +2,7 @@
 layout: terminal
 title: Terminal
 permalink: /terminal/
-description: A terminal-style console for browsing this blog. Type help to begin.
+description: A shell for browsing this blog. Posts are files; use ls, cd, cat, grep and find.
 ---
 
 {%- comment -%}
@@ -47,6 +47,9 @@ description: A terminal-style console for browsing this blog. Type help to begin
         "url": {{ post.url | relative_url | jsonify }},
         "date": {{ post.date | date: "%Y-%m-%d" | jsonify }},
         "slug": {{ post.slug | jsonify | replace: '<', lt }},
+        "categories": {{ post.categories | jsonify | replace: '<', lt }},
+        "tags": {{ post.tags | jsonify | replace: '<', lt }},
+        "words": {{ post.content | strip_html | number_of_words }},
         "excerpt": {{ post.content | strip_html | normalize_whitespace | truncatewords: 90 | jsonify | replace: '<', lt }}
       }{%- unless forloop.last -%},{%- endunless -%}
       {%- endfor -%}
@@ -71,7 +74,7 @@ description: A terminal-style console for browsing this blog. Type help to begin
 
     <form class="term-form" id="term-form" autocomplete="off">
       <label class="term-label" for="term-in">Terminal command</label>
-      <span class="term-ps1" aria-hidden="true">visitor@blog:~$</span>
+      <span class="term-ps1" id="term-ps1" aria-hidden="true">visitor@blog:~$</span>
       <input class="term-in" id="term-in" type="text" name="cmd"
              autocomplete="off" autocapitalize="off" autocorrect="off"
              spellcheck="false" enterkeyhint="send">
@@ -81,8 +84,9 @@ description: A terminal-style console for browsing this blog. Type help to begin
     <div class="term-taps" id="term-taps">
       <span class="term-taps-hint">tap to type, or:</span>
       <button type="button" class="term-tap" data-cmd="help">help</button>
-      <button type="button" class="term-tap" data-cmd="posts">posts</button>
-      <button type="button" class="term-tap" data-cmd="cat 1">cat 1</button>
+      <button type="button" class="term-tap" data-cmd="ls">ls</button>
+      <button type="button" class="term-tap" data-cmd="cd posts">cd posts</button>
+      <button type="button" class="term-tap" data-cmd="tree">tree</button>
       <button type="button" class="term-tap" data-cmd="neofetch">neofetch</button>
       <button type="button" class="term-tap" data-cmd="skin">skin</button>
       <button type="button" class="term-tap" data-cmd="exit">exit</button>
@@ -95,9 +99,11 @@ description: A terminal-style console for browsing this blog. Type help to begin
   <div class="term-noscript">
     <h1>Terminal</h1>
     <p>
-      This page is a JavaScript toy: a small console for browsing the blog
-      by typing commands. It needs JavaScript, which is off in your
-      browser, so here is the same thing as an ordinary list.
+      This page is a JavaScript toy: a small shell for browsing the blog by
+      typing commands (posts are laid out as files, so <code>ls</code>,
+      <code>cd</code>, <code>cat</code> and <code>grep</code> all work). It
+      needs JavaScript, which is off in your browser, so here is the same
+      thing as an ordinary list.
     </p>
     <p><a href="{{ '/' | relative_url }}">&larr; Back to the site</a></p>
 

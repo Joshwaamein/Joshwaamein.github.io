@@ -47,14 +47,27 @@
   var home = site.home || '/';
   var retroUrl = site.retro || '/retro/';
 
+  // The live prompt element, so `cd` is visible in the prompt itself.
+  var ps1El = document.getElementById('term-ps1');
+
+  function promptText() {
+    return 'visitor@blog:' + currentPath() + '$';
+  }
+
+  function updatePrompt() {
+    if (ps1El) ps1El.textContent = promptText();
+  }
+
   // Echo the command the way a shell does: styled prompt, plain text cmd.
+  // The echoed prompt is captured at run time, so scrolling back shows which
+  // directory each command was actually run from.
   function echo(cmd) {
     var line = document.createElement('div');
     line.className = 'term-line term-line--echo';
 
     var ps1 = document.createElement('span');
     ps1.className = 'term-ps1';
-    ps1.textContent = 'visitor@blog:~$ ';
+    ps1.textContent = promptText() + ' ';
 
     var body = document.createElement('span');
     body.textContent = cmd;
@@ -209,183 +222,998 @@
     }
   }
 
+  /* ---------- virtual filesystem ----------
+   *
+   * The point of this page is navigating a blog with shell commands, so the
+   * content is modelled as a tree rather than a flat list addressed by index.
+   * One post is one file, and the same post is reachable by three paths,
+   * the way hardlinks work:
+   *
+   *   ~/
+   *   |-- README.md
+   *   |-- about.md
+   *   |-- posts/            every post, one file per post
+   *   |-- categories/<cat>/ the same files, grouped by category
+   *   `-- tags/<tag>/       the same files, grouped by tag
+   *
+   * Nodes are plain objects: {name, type, children{}, post}. Directories get
+   * a children map, files carry a reference to the post record. Every name
+   * here is derived from build-time post data, never from typed input.
+   */
+
+  // A slug is already URL-safe; strip anything else so a filename can never
+  // carry a path separator or a quote into the DOM.
+  function fileNameFor(post) {
+    var slug = String(post.slug || 'untitled').replace(/[^A-Za-z0-9._-]/g, '-');
+    return (post.date || '0000-00-00') + '-' + slug + '.md';
+  }
+
+  // Category/tag names come from front matter and become directory names:
+  // lowercased, spaces to dashes, anything else dropped. "Home Lab" -> home-lab.
+  function dirNameFor(raw) {
+    var s = String(raw == null ? '' : raw).toLowerCase();
+    s = s.replace(/\s+/g, '-').replace(/[^a-z0-9._-]/g, '');
+    return s || 'untagged';
+  }
+
+  function makeDir(name) { return { name: name, type: 'dir', children: {} }; }
+  function makeFile(name, post) { return { name: name, type: 'file', post: post }; }
+
+  function addChild(dir, node) {
+    dir.children[node.name] = node;
+    return node;
+  }
+
+  // Group posts under a parent by a front-matter list field. A post with no
+  // values is skipped rather than filed under a fabricated directory.
+  function buildGrouping(parent, field) {
+    for (var i = 0; i < posts.length; i++) {
+      var post = posts[i];
+      var values = post[field];
+      if (!values || !values.length) continue;
+
+      for (var j = 0; j < values.length; j++) {
+        var dirName = dirNameFor(values[j]);
+        var dir = Object.prototype.hasOwnProperty.call(parent.children, dirName)
+          ? parent.children[dirName]
+          : addChild(parent, makeDir(dirName));
+        addChild(dir, makeFile(fileNameFor(post), post));
+      }
+    }
+  }
+
+  var ROOT = makeDir('~');
+
+  (function buildTree() {
+    var postsDir = addChild(ROOT, makeDir('posts'));
+    for (var i = 0; i < posts.length; i++) {
+      addChild(postsDir, makeFile(fileNameFor(posts[i]), posts[i]));
+    }
+    buildGrouping(addChild(ROOT, makeDir('categories')), 'categories');
+    buildGrouping(addChild(ROOT, makeDir('tags')), 'tags');
+
+    // Generated files, so `cat` has something to say at the top level.
+    // post === null marks them: catOne() renders them from synthFile().
+    addChild(ROOT, makeFile('README.md', null));
+    addChild(ROOT, makeFile('about.md', null));
+  })();
+
+  var cwd = ROOT;        // current directory node
+  var cwdPath = [];      // segments from ROOT, e.g. ['posts']
+  var prevPath = null;   // for `cd -`
+
+  function pathString(segments) {
+    return (segments && segments.length) ? '~/' + segments.join('/') : '~';
+  }
+
+  function currentPath() { return pathString(cwdPath); }
+
+  // Walk from ROOT down a segment list already known to be valid.
+  function nodeAt(segments) {
+    var node = ROOT;
+    for (var i = 0; i < segments.length; i++) {
+      node = node.children[segments[i]];
+    }
+    return node;
+  }
+
+  // Resolve a path to {node, segments}, or null when it does not exist.
+  // Handles absolute (/ or ~), relative, ".", ".." and trailing slashes.
+  // All path semantics live here so cd/ls/cat/stat/find agree.
+  function resolvePath(raw) {
+    var str = String(raw == null ? '' : raw).trim();
+    if (!str) return { node: cwd, segments: cwdPath.slice() };
+
+    var node, segments;
+    if (str.charAt(0) === '/' || str.charAt(0) === '~') {
+      node = ROOT;
+      segments = [];
+      str = str.replace(/^[~/]+/, '');
+    } else {
+      node = cwd;
+      segments = cwdPath.slice();
+    }
+
+    var parts = str.split('/');
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i];
+      if (!part || part === '.') continue;
+
+      if (part === '..') {
+        if (segments.length) {
+          segments.pop();
+          node = nodeAt(segments);
+        }
+        continue;
+      }
+
+      // hasOwnProperty, not a bare lookup: `cd constructor` must 404 rather
+      // than resolve an inherited Object member. Same bug class as the
+      // COMMANDS/ALIASES guards below.
+      if (node.type !== 'dir' ||
+          !Object.prototype.hasOwnProperty.call(node.children, part)) {
+        return null;
+      }
+      node = node.children[part];
+      segments.push(part);
+    }
+    return { node: node, segments: segments };
+  }
+
+  // Directories first, then files, each alphabetically (ls
+  // --group-directories-first).
+  function listing(dir) {
+    var dirs = [];
+    var files = [];
+    for (var name in dir.children) {
+      if (!Object.prototype.hasOwnProperty.call(dir.children, name)) continue;
+      var node = dir.children[name];
+      (node.type === 'dir' ? dirs : files).push(node);
+    }
+    function byName(a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); }
+    dirs.sort(byName);
+    files.sort(byName);
+    return dirs.concat(files);
+  }
+
+  function countChildren(dir) {
+    var n = 0;
+    for (var k in dir.children) {
+      if (Object.prototype.hasOwnProperty.call(dir.children, k)) n++;
+    }
+    return n;
+  }
+
+  // Every file at or under a node, with its full path. Used by find and
+  // recursive grep.
+  //
+  // posts/ is walked first so that when a caller dedupes by URL, the path it
+  // keeps is the canonical ~/posts/<file> rather than whichever grouping
+  // happened to sort first (categories/ would otherwise always win and a
+  // grep from ~ would never mention posts/ at all).
+  function walkFiles(node, segments, acc) {
+    if (node.type === 'file') {
+      acc.push({ node: node, path: pathString(segments) });
+      return acc;
+    }
+    var entries = listing(node);
+    var ordered = [];
+    var deferred = [];
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].name === 'categories' || entries[i].name === 'tags') {
+        deferred.push(entries[i]);
+      } else {
+        ordered.push(entries[i]);
+      }
+    }
+    ordered = ordered.concat(deferred);
+
+    for (var j = 0; j < ordered.length; j++) {
+      walkFiles(ordered[j], segments.concat(ordered[j].name), acc);
+    }
+    return acc;
+  }
+
+  // Strip one layer of matching quotes from an operand. A shell would do
+  // this before the command ever sees the argument; here the raw line is
+  // split on whitespace, so `find -name "*docker*"` would otherwise try to
+  // match a filename that literally contains quote characters.
+  function unquote(value) {
+    var s = String(value == null ? '' : value);
+    if (s.length > 1) {
+      var first = s.charAt(0);
+      var last = s.charAt(s.length - 1);
+      if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+        return s.substring(1, s.length - 1);
+      }
+    }
+    return s;
+  }
+
+  // Split argv into flags and operands so commands accept flags in any
+  // order: -l, -la (cluster), --long, and -n 5 (value follows).
+  function parseArgs(args, valueFlags) {
+    var flags = {};
+    var rest = [];
+    var takesValue = valueFlags || {};
+
+    for (var i = 0; i < args.length; i++) {
+      var a = String(args[i]);
+      if (a.length > 1 && a.charAt(0) === '-') {
+        var body = a.replace(/^-+/, '');
+        if (a.indexOf('--') === 0) {
+          flags[body] = true;
+          continue;
+        }
+        // A short flag that takes a value consumes the next argument.
+        if (Object.prototype.hasOwnProperty.call(takesValue, body)) {
+          flags[body] = (i + 1 < args.length) ? unquote(args[i + 1]) : '';
+          i++;
+          continue;
+        }
+        for (var c = 0; c < body.length; c++) flags[body.charAt(c)] = true;
+      } else {
+        rest.push(unquote(a));
+      }
+    }
+    return { flags: flags, rest: rest };
+  }
+
+  // A directory entry line. Long form apes `ls -l`: mode, size, date, name.
+  function writeEntry(node, longForm) {
+    var line = document.createElement('div');
+    line.className = 'term-line term-line--entry';
+
+    if (longForm) {
+      line.appendChild(textSpan(
+        node.type === 'dir' ? 'drwxr-xr-x' : '-rw-r--r--', 'term-mode'));
+      // Directories report child count, files their word count: the closest
+      // honest analogue of a byte size when the body is an excerpt.
+      line.appendChild(textSpan(node.type === 'dir'
+        ? pad(countChildren(node), 4)
+        : pad((node.post && node.post.words) || 0, 4), 'term-size'));
+      // Directories have no single date, so the column shows a dash rather
+      // than ten blanks, which read as a rendering fault in the built page.
+      line.appendChild(textSpan(
+        (node.post && node.post.date) || '    -     ', 'term-date'));
+    }
+
+    line.appendChild(textSpan(
+      node.name + (node.type === 'dir' ? '/' : ''),
+      node.type === 'dir' ? 'term-dirname' : 'term-filename'));
+
+    if (longForm && node.post && node.post.title) {
+      line.appendChild(textSpan(node.post.title, 'term-entry-title'));
+    }
+    out.appendChild(line);
+  }
+
+  // README.md and about.md are generated rather than post-backed, so their
+  // text lives here. Keeps `cat README.md` from being a special-cased error.
+  function synthFile(name) {
+    if (name === 'README.md') {
+      return [
+        (site.title || 'this blog') + ' - terminal view',
+        '',
+        'This is a filesystem, not a menu. Posts are files; move around with',
+        'the usual commands:',
+        '',
+        '  ls  cd  pwd  tree  cat  head  tail  grep  find  wc  stat  du',
+        '',
+        'The same post appears in posts/, categories/ and tags/, the way a',
+        'hardlink shows one file in several places.',
+        '',
+        'Try:  cd posts   then   ls -l   then   cat <tab>',
+        'Or:   find . -name "*docker*"   |   grep -i kubernetes',
+        '',
+        'help lists everything. man <command> explains one.'
+      ];
+    }
+    if (name === 'about.md') {
+      return [
+        site.title || 'this blog',
+        site.tagline || '',
+        '',
+        'Cloud infrastructure and systems engineer. This blog covers',
+        'homelab builds, Linux, DevOps, networking and security.',
+        '',
+        posts.length + ' posts published.',
+        site.github ? 'github.com/' + site.github : ''
+      ];
+    }
+    return null;
+  }
+
+  // Wrap to a column and return the lines, so head/tail/wc all measure the
+  // same "lines" the reader sees. writeWrapped prints; this one returns.
+  function wrapLines(text, width) {
+    var max = width || 76;
+    var words = String(text).split(/\s+/);
+    var lines = [];
+    var line = '';
+    for (var i = 0; i < words.length; i++) {
+      if (!words[i]) continue;
+      if (line && (line.length + 1 + words[i].length) > max) {
+        lines.push(line);
+        line = words[i];
+      } else {
+        line = line ? (line + ' ' + words[i]) : words[i];
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  // Shell glob, only * and ?, matched by walking the pattern. Deliberately
+  // NOT compiled to a RegExp: user-typed patterns must never reach the regex
+  // engine (ReDoS), and the same rule already governs grep.
+  function globMatch(name, pattern) {
+    var n = String(name).toLowerCase();
+    var p = String(pattern).toLowerCase();
+
+    // Iterative wildcard match with backtracking on the last '*'.
+    var ni = 0, pi = 0, star = -1, mark = 0;
+    while (ni < n.length) {
+      if (pi < p.length && (p.charAt(pi) === '?' || p.charAt(pi) === n.charAt(ni))) {
+        ni++; pi++;
+      } else if (pi < p.length && p.charAt(pi) === '*') {
+        star = pi++; mark = ni;
+      } else if (star >= 0) {
+        pi = star + 1; ni = ++mark;
+      } else {
+        return false;
+      }
+    }
+    while (pi < p.length && p.charAt(pi) === '*') pi++;
+    return pi === p.length;
+  }
+
+  // A grep hit: path, then the title. Separate elements, never innerHTML.
+  function writeMatch(path, post) {
+    var line = document.createElement('div');
+    line.className = 'term-line term-line--match';
+    line.appendChild(textSpan(path, 'term-filename'));
+    line.appendChild(textSpan(post.title || '(untitled)', 'term-entry-title'));
+    out.appendChild(line);
+  }
+
+  var MANPAGES = {
+    ls: { name: 'list directory contents',
+          usage: 'ls [-l] [path]',
+          desc: ['Lists directories first, then files. -l adds the mode, a size',
+                 '(child count for directories, word count for posts), the post',
+                 'date and the full title.'] },
+    cd: { name: 'change the working directory',
+          usage: 'cd <path>',
+          desc: ['Accepts absolute (~/posts, /posts), relative (posts,',
+                 '../tags), . and .., and "cd -" to go back to the previous',
+                 'directory. Bare cd returns to ~.'] },
+    pwd: { name: 'print working directory',
+           usage: 'pwd',
+           desc: ['Prints the current path. The prompt shows it too.'] },
+    cat: { name: 'concatenate and print files',
+           usage: 'cat <file>...',
+           desc: ['Prints a post excerpt with its date, URL, categories and',
+                  'tags. Several files print with ==> headers, like the real',
+                  'thing. Use open to read the full post in the browser.'] },
+    grep: { name: 'search post text and titles',
+            usage: 'grep [-i] [-l] <string> [path]',
+            desc: ['Substring search, always case-insensitive. -l prints only',
+                   'the matching paths. A path argument limits the search, so',
+                   '"grep docker categories/devops" works. Matching is plain',
+                   'indexOf, not a regex, so no pattern can hang the page.'] },
+    find: { name: 'find files by name',
+            usage: 'find [path] -name <pattern>',
+            desc: ['Walks the tree from path (default: here) and prints files',
+                   'whose name matches a glob. * and ? are supported:',
+                   'find . -name "*docker*"'] },
+    tree: { name: 'list the tree',
+            usage: 'tree [path]',
+            desc: ['Prints the tree with the usual glyphs. Depth is capped so',
+                   'one keystroke cannot dump every tag directory; cd in for',
+                   'the rest.'] },
+    head: { name: 'print the first lines of a file',
+            usage: 'head [-n N] <file>',
+            desc: ['Default 10 lines, wrapped at 76 columns.'] },
+    tail: { name: 'print the last lines of a file',
+            usage: 'tail [-n N] <file>',
+            desc: ['Default 10 lines, wrapped at 76 columns.'] },
+    wc: { name: 'count lines and words',
+          usage: 'wc [-w|-l] <file>',
+          desc: ['Prints lines then words. The word count is the whole post,',
+                 'while the text shown here is an excerpt, so they disagree',
+                 'on purpose.'] },
+    stat: { name: 'file metadata',
+            usage: 'stat <file>',
+            desc: ['Type, size, date, URL, categories and tags for one file.'] },
+    du: { name: 'summarise size',
+          usage: 'du [path]',
+          desc: ['Total words under a path. A post filed under several',
+                 'categories or tags is counted once.'] },
+    open: { name: 'open the real post',
+            usage: 'open [file]',
+            desc: ['Navigates the browser to the post this file stands for.',
+                   'This is the one command that leaves the terminal.'] },
+    skin: { name: 'change the terminal palette',
+            usage: 'skin [name]',
+            desc: ['matrix, amber, paper or netscape. Scoped to the console,',
+                   'so it never changes the site theme. Saved per browser.'] },
+    file: { name: 'identify a path',
+            usage: 'file <path>',
+            desc: ['Says whether a path is a directory, a post, or generated.'] },
+    man: { name: 'show a manual page',
+           usage: 'man <command>',
+           desc: ['You are reading one.'] },
+    help: { name: 'list the commands',
+            usage: 'help',
+            desc: ['Grouped by what you are trying to do.'] }
+  };
+
   /* ---------- commands ---------- */
+
+  // Reading one file. Shared by cat/less/head/tail so they cannot drift:
+  // they differ only in how much they show.
+  function catOne(target, showHeader, limit, fromEnd) {
+    var found = resolvePath(target);
+    if (!found) {
+      write('cat: ' + target + ': No such file or directory', 'err');
+      return;
+    }
+    if (found.node.type === 'dir') {
+      write('cat: ' + target + ': Is a directory', 'err');
+      return;
+    }
+
+    if (showHeader) write('==> ' + pathString(found.segments) + ' <==', 'dim');
+
+    // Generated file: print its canned text and stop.
+    if (!found.node.post) {
+      var synth = synthFile(found.node.name) || ['(empty)'];
+      var slice = synth;
+      if (limit) {
+        slice = fromEnd ? synth.slice(-limit) : synth.slice(0, limit);
+      }
+      for (var s = 0; s < slice.length; s++) {
+        write(slice[s], (!limit && s === 0) ? 'accent' : null);
+      }
+      return;
+    }
+
+    var post = found.node.post;
+
+    // head/tail operate on the wrapped body, which is what a reader means
+    // by "the first few lines" of a post.
+    if (limit) {
+      var lines = wrapLines(post.excerpt || '', 76);
+      var take = fromEnd ? lines.slice(-limit) : lines.slice(0, limit);
+      for (var i = 0; i < take.length; i++) write(take[i]);
+      return;
+    }
+
+    write(post.title, 'accent');
+    write(post.date + '  ' + post.url, 'dim');
+    if (post.categories && post.categories.length) {
+      write('categories: ' + post.categories.join(', '), 'dim');
+    }
+    if (post.tags && post.tags.length) {
+      write('tags: ' + post.tags.join(', '), 'dim');
+    }
+    writeBlank();
+    if (post.excerpt) writeWrapped(post.excerpt);
+    else write('(no text extracted)', 'dim');
+    writeBlank();
+    write('excerpt only. "open ' + found.node.name + '" for the full post', 'dim');
+  }
+
+  function fileOperand(cmdName, target) {
+    var found = resolvePath(target);
+    if (!found) {
+      write(cmdName + ': ' + target + ': No such file or directory', 'err');
+      return null;
+    }
+    return found;
+  }
 
   var COMMANDS = {
     help: function () {
-      write('available commands:');
+      write('navigation', 'accent');
+      write('  ls [-l] [path]        list a directory');
+      write('  cd <path>             change directory (.. - ~ / all work)');
+      write('  pwd                   print working directory');
+      write('  tree [path]           show the tree');
       writeBlank();
-      write('  help          show this list');
-      write('  about         who runs this site');
-      write('  posts         list every post (alias: ls)');
-      write('  open <n>      open post number <n>');
-      write('  cat <n|slug>  print a post excerpt here');
-      write('  grep <term>   search titles and text');
-      write('  neofetch      system card, sort of');
-      write('  skin <name>   change the look (try "skin")');
-      write('  retro         the 1998 version of this site');
-      write('  modern        the normal site');
-      write('  clear         clear the screen');
-      write('  whoami        you, apparently');
-      write('  exit          back to the normal site');
+      write('reading', 'accent');
+      write('  cat <file>...         print a post excerpt');
+      write('  head/tail [-n N] <f>  first/last N lines');
+      write('  less <file>           cat, without the pager');
+      write('  open [file]           open the real post in the browser');
       writeBlank();
-      write('up/down for history, tab to complete', 'dim');
+      write('searching', 'accent');
+      write('  grep [-i] [-l] <str>  search titles and text');
+      write('  find [path] -name <p> find files by glob pattern');
+      write('  wc [-w|-l] <file>     word/line count');
+      writeBlank();
+      write('system', 'accent');
+      write('  stat <file>           metadata for one file');
+      write('  file <path>           what kind of thing is this');
+      write('  du [path]             size of a tree, in words');
+      write('  man <cmd>             help for one command');
+      write('  history               what you have typed');
+      write('  whoami  uname  date  env  echo  which  clear');
+      writeBlank();
+      write('elsewhere', 'accent');
+      write('  modern  retro  skin [name]  neofetch  exit');
+      writeBlank();
+      write('tab completes commands AND paths, up/down for history', 'dim');
+      write('start with: ls, then cd posts', 'dim');
     },
 
     about: function () {
-      write(site.title || 'this blog', 'accent');
-      if (site.tagline) write(site.tagline, 'dim');
-      writeBlank();
-      write('Cloud infrastructure and systems engineer. This blog covers');
-      write('homelab builds, Linux, DevOps, networking and security.');
-      writeBlank();
-      write(posts.length + ' posts published. type "posts" to list them.');
-      if (site.github) write('github.com/' + site.github, 'dim');
+      catOne('~/about.md', false);
     },
 
-    posts: function () {
-      if (!posts.length) {
-        write('no posts found', 'err');
+    ls: function (args) {
+      var parsed = parseArgs(args);
+      var longForm = !!(parsed.flags.l || parsed.flags.long);
+      var target = parsed.rest.length ? parsed.rest[0] : '';
+
+      var found = resolvePath(target);
+      if (!found) {
+        write('ls: cannot access ' + target + ': No such file or directory', 'err');
         return;
       }
-      write(posts.length + ' posts, newest first:');
-      writeBlank();
-      for (var i = 0; i < posts.length; i++) {
-        writePost(i + 1, posts[i]);
+      if (found.node.type === 'file') {
+        writeEntry(found.node, longForm);
+        return;
       }
+
+      var entries = listing(found.node);
+      if (!entries.length) {
+        write('(empty)', 'dim');
+        return;
+      }
+      if (longForm) write('total ' + entries.length, 'dim');
+      for (var i = 0; i < entries.length; i++) writeEntry(entries[i], longForm);
+      if (!longForm && entries.length > 8) {
+        writeBlank();
+        write(entries.length + ' entries, "ls -l" for detail', 'dim');
+      }
+    },
+
+    cd: function (args) {
+      var target = args.length ? args[0] : '~';
+
+      if (target === '-') {
+        if (!prevPath) {
+          write('cd: OLDPWD not set', 'err');
+          return;
+        }
+        var back = prevPath;
+        prevPath = cwdPath.slice();
+        cwdPath = back;
+        cwd = nodeAt(cwdPath);
+        write(currentPath(), 'dim');
+        updatePrompt();
+        return;
+      }
+
+      var found = resolvePath(target);
+      if (!found) {
+        write('cd: ' + target + ': No such file or directory', 'err');
+        return;
+      }
+      if (found.node.type !== 'dir') {
+        write('cd: ' + target + ': Not a directory', 'err');
+        return;
+      }
+      prevPath = cwdPath.slice();
+      cwd = found.node;
+      cwdPath = found.segments;
+      updatePrompt();
+    },
+
+    pwd: function () { write(currentPath()); },
+
+    tree: function (args) {
+      var target = args.length ? args[0] : '';
+      var found = resolvePath(target);
+      if (!found) {
+        write('tree: ' + target + ': No such file or directory', 'err');
+        return;
+      }
+      write(pathString(found.segments), 'accent');
+
+      var dirs = 0;
+      var files = 0;
+
+      // Depth is capped: `tree ~` across every tag would otherwise dump
+      // hundreds of lines from one keystroke.
+      function walk(node, prefix, depth) {
+        var entries = listing(node);
+        for (var i = 0; i < entries.length; i++) {
+          var child = entries[i];
+          var last = (i === entries.length - 1);
+          var pad2 = prefix + (last ? '    ' : '|   ');
+
+          if (child.type === 'dir') {
+            dirs++;
+            write(prefix + (last ? '`-- ' : '|-- ') + child.name + '/');
+            if (depth < 1) {
+              walk(child, pad2, depth + 1);
+            } else if (countChildren(child)) {
+              write(pad2 + '`-- ... ' + countChildren(child) + ' more', 'dim');
+            }
+          } else {
+            files++;
+            write(prefix + (last ? '`-- ' : '|-- ') + child.name);
+          }
+        }
+      }
+
+      walk(found.node, '', 0);
       writeBlank();
-      write('type "open <n>" to read one', 'dim');
+      write(dirs + ' directories, ' + files + ' files', 'dim');
+    },
+
+    cat: function (args) {
+      var parsed = parseArgs(args);
+      if (!parsed.rest.length) {
+        write('usage: cat <file>   (try "ls" first)', 'err');
+        return;
+      }
+      for (var i = 0; i < parsed.rest.length; i++) {
+        catOne(parsed.rest[i], parsed.rest.length > 1);
+      }
+    },
+
+    head: function (args) {
+      var parsed = parseArgs(args, { n: true });
+      if (!parsed.rest.length) {
+        write('usage: head [-n N] <file>', 'err');
+        return;
+      }
+      var n = parseInt(parsed.flags.n, 10);
+      if (!n || n < 1) n = 10;
+      catOne(parsed.rest[0], false, n, false);
+    },
+
+    tail: function (args) {
+      var parsed = parseArgs(args, { n: true });
+      if (!parsed.rest.length) {
+        write('usage: tail [-n N] <file>', 'err');
+        return;
+      }
+      var n = parseInt(parsed.flags.n, 10);
+      if (!n || n < 1) n = 10;
+      catOne(parsed.rest[0], false, n, true);
     },
 
     open: function (args) {
-      if (!args.length) {
-        write('usage: open <n>   (see "posts")', 'err');
+      var target = args.length ? args[0] : '';
+      var found = resolvePath(target);
+      if (!found) {
+        write('open: ' + target + ': No such file or directory', 'err');
         return;
       }
-      // Deliberately strict: only a plain positive integer is accepted, so
-      // nothing user-typed reaches a URL or the DOM unchecked.
-      if (!/^[0-9]+$/.test(args[0])) {
-        write('open: not a number: ' + args[0], 'err');
+      if (found.node.type !== 'file') {
+        write('open: ' + (target || currentPath()) + ': Is a directory', 'err');
         return;
       }
-      var n = parseInt(args[0], 10);
-      if (n < 1 || n > posts.length) {
-        write('open: no post ' + n + ' (valid: 1-' + posts.length + ')', 'err');
+      if (!found.node.post) {
+        write('open: ' + found.node.name + ' is generated, not a post', 'err');
         return;
       }
-      var post = posts[n - 1];
-      write('opening: ' + post.title);
+      write('opening: ' + found.node.post.title);
       window.setTimeout(function () {
-        window.location.href = post.url;
+        window.location.href = found.node.post.url;
       }, 350);
     },
 
-    // cat accepts either a number (as per "posts") or a slug, because
-    // typing a 60-character slug by hand is nobody's idea of fun.
-    cat: function (args) {
-      if (!args.length) {
-        write('usage: cat <n|slug>   (see "posts")', 'err');
-        return;
-      }
-      var post = resolvePost(args[0]);
-      if (!post) {
-        write('cat: no such post: ' + args[0], 'err');
-        write('try "posts" for the list', 'dim');
-        return;
-      }
-      write(post.title, 'accent');
-      write(post.date + '  ' + post.url, 'dim');
-      writeBlank();
-      if (post.excerpt) {
-        writeWrapped(post.excerpt);
-      } else {
-        write('(no text extracted)', 'dim');
-      }
-      writeBlank();
-      write('this is an excerpt. "open ' + (posts.indexOf(post) + 1) + '" for the full post', 'dim');
-    },
-
-    // grep searches the excerpt+title data already embedded for `cat`, so
-    // it costs zero extra page weight. That was the objection to shipping
-    // search at all, and Tier 2 removed it.
+    // Searches the excerpt+title data already embedded for cat, so it costs
+    // no extra page weight. Plain substring matching, never RegExp: a typed
+    // pattern compiled to a regex is a ReDoS hazard.
     grep: function (args) {
-      if (!args.length) {
-        write('usage: grep <term>', 'err');
+      var parsed = parseArgs(args);
+      if (!parsed.rest.length) {
+        write('usage: grep [-i] [-l] <string> [path]', 'err');
         return;
       }
-      var needle = args.join(' ').toLowerCase();
+      var needle = parsed.rest[0];
       if (needle.length < 2) {
         write('grep: search for at least 2 characters', 'err');
         return;
       }
-
-      var hits = [];
-      for (var i = 0; i < posts.length; i++) {
-        var p = posts[i];
-        var inTitle = (p.title || '').toLowerCase().indexOf(needle) !== -1;
-        var inBody = (p.excerpt || '').toLowerCase().indexOf(needle) !== -1;
-        if (inTitle || inBody) {
-          hits.push({ index: i + 1, post: p, where: inTitle ? 'title' : 'text' });
-        }
-      }
-
-      if (!hits.length) {
-        write('grep: no matches for "' + args.join(' ') + '"', 'err');
+      var where = parsed.rest.length > 1 ? parsed.rest[1] : '';
+      var found = resolvePath(where);
+      if (!found) {
+        write('grep: ' + where + ': No such file or directory', 'err');
         return;
       }
 
-      write(hits.length + (hits.length === 1 ? ' match' : ' matches') + ':');
-      writeBlank();
-      for (var j = 0; j < hits.length; j++) {
-        writePost(hits[j].index, hits[j].post);
-        if (hits[j].where === 'text') {
-          writeContext(hits[j].post.excerpt, needle);
+      // Case-insensitive always: a blog search that is case-sensitive by
+      // default would only annoy, so -i documents intent rather than changing it.
+      var hay = needle.toLowerCase();
+      var namesOnly = !!parsed.flags.l;
+
+      var files = walkFiles(found.node, found.segments, []);
+      var seen = {};
+      var hits = 0;
+
+      for (var i = 0; i < files.length; i++) {
+        var post = files[i].node.post;
+        if (!post) continue;
+        // The same post appears under posts/, categories/ and tags/, so
+        // dedupe by URL or every hit is reported three times.
+        if (Object.prototype.hasOwnProperty.call(seen, post.url)) continue;
+
+        var inTitle = (post.title || '').toLowerCase().indexOf(hay) !== -1;
+        var inBody = (post.excerpt || '').toLowerCase().indexOf(hay) !== -1;
+        if (!inTitle && !inBody) continue;
+
+        seen[post.url] = 1;
+        hits++;
+
+        if (namesOnly) {
+          write(files[i].path);
+        } else {
+          writeMatch(files[i].path, post);
+          if (inBody) writeContext(post.excerpt, hay);
         }
       }
+
+      if (!hits) {
+        write('grep: no matches for ' + needle, 'err');
+        return;
+      }
       writeBlank();
-      write('type "open <n>" or "cat <n>"', 'dim');
+      write(hits + (hits === 1 ? ' match' : ' matches'), 'dim');
     },
 
-    // Deliberately not a real neofetch: every value here is invented or
-    // derived from public site data. No real hostnames, kernels or paths.
-    neofetch: function () {
-      var rows = [
-        ['host', 'static-site (jekyll)'],
-        ['kernel', 'liquid 4.x'],
-        ['shell', 'terminal.js'],
-        ['posts', String(posts.length)],
-        ['theme', 'matrix-green'],
-        ['uptime', 'since you loaded the page'],
-        ['packages', '0 (vanilla js, no build step)'],
-        ['tracking', 'none']
-      ];
-      var art = [
-        '   ,--.   ',
-        '  ( oo|   ',
-        '  |  -|   ',
-        '  |__/|   ',
-        '  |   |   '
-      ];
-      var max = art.length > rows.length ? art.length : rows.length;
-      for (var i = 0; i < max; i++) {
-        var left = art[i] || '          ';
-        var row = rows[i];
-        writeNeofetchRow(left, row ? row[0] : '', row ? row[1] : '');
+    // find [path] -name <glob>. Only * is supported, which covers what
+    // anyone actually types here.
+    find: function (args) {
+      var parsed = parseArgs(args, { name: true });
+      var where = parsed.rest.length ? parsed.rest[0] : '';
+      var found = resolvePath(where);
+      if (!found) {
+        write('find: ' + where + ': No such file or directory', 'err');
+        return;
+      }
+
+      var pattern = parsed.flags.name;
+      var files = walkFiles(found.node, found.segments, []);
+      var shown = 0;
+
+      for (var i = 0; i < files.length; i++) {
+        if (pattern && !globMatch(files[i].node.name, String(pattern))) continue;
+        write(files[i].path);
+        shown++;
+      }
+
+      if (!shown) {
+        write(pattern ? 'find: no files match ' + pattern : 'find: nothing found', 'dim');
+        return;
+      }
+      writeBlank();
+      write(shown + ' file' + (shown === 1 ? '' : 's'), 'dim');
+    },
+
+    wc: function (args) {
+      var parsed = parseArgs(args);
+      if (!parsed.rest.length) {
+        write('usage: wc [-w|-l] <file>', 'err');
+        return;
+      }
+      var found = fileOperand('wc', parsed.rest[0]);
+      if (!found) return;
+      if (found.node.type === 'dir') {
+        write('wc: ' + parsed.rest[0] + ': Is a directory', 'err');
+        return;
+      }
+
+      var post = found.node.post;
+      var text = post ? (post.excerpt || '')
+                      : (synthFile(found.node.name) || []).join(' ');
+      var words = (post && post.words) ? post.words : text.split(/\s+/).length;
+      var lines = wrapLines(text, 76).length;
+
+      if (parsed.flags.w) { write(words + '  ' + found.node.name); return; }
+      if (parsed.flags.l) { write(lines + '  ' + found.node.name); return; }
+      write(pad(lines, 5) + pad(words, 7) + '  ' + found.node.name);
+      if (post) write('(words are the whole post; the body here is an excerpt)', 'dim');
+    },
+
+    stat: function (args) {
+      if (!args.length) {
+        write('usage: stat <file>', 'err');
+        return;
+      }
+      var found = fileOperand('stat', args[0]);
+      if (!found) return;
+
+      var node = found.node;
+      write('  File: ' + pathString(found.segments));
+      write('  Type: ' + (node.type === 'dir' ? 'directory' : 'regular file'));
+      if (node.type === 'dir') {
+        write('Entries: ' + countChildren(node));
+      } else if (node.post) {
+        write('  Size: ' + (node.post.words || 0) + ' words');
+        write('Modify: ' + node.post.date);
+        write('   URL: ' + node.post.url);
+        if (node.post.categories && node.post.categories.length) {
+          write('   Cat: ' + node.post.categories.join(', '));
+        }
+        if (node.post.tags && node.post.tags.length) {
+          write('  Tags: ' + node.post.tags.join(', '));
+        }
+      } else {
+        write('  Size: generated');
+      }
+      write('Access: -r--r--r-- (read only, it is a blog)', 'dim');
+    },
+
+    file: function (args) {
+      if (!args.length) {
+        write('usage: file <path>', 'err');
+        return;
+      }
+      var found = resolvePath(args[0]);
+      if (!found) {
+        write('file: ' + args[0] + ': No such file or directory', 'err');
+        return;
+      }
+      if (found.node.type === 'dir') {
+        write(args[0] + ': directory');
+      } else if (found.node.post) {
+        write(found.node.name + ': Markdown document, UTF-8 text, blog post');
+      } else {
+        write(found.node.name + ': Markdown document, UTF-8 text, generated');
       }
     },
 
-    // Skins are terminal-only: they set data-skin on the console element,
-    // never on <html>, so the rest of the site keeps master's theme.
+    du: function (args) {
+      var target = args.length ? args[0] : '';
+      var found = resolvePath(target);
+      if (!found) {
+        write('du: ' + target + ': No such file or directory', 'err');
+        return;
+      }
+      var files = walkFiles(found.node, found.segments, []);
+      var seen = {};
+      var words = 0;
+      var unique = 0;
+      for (var i = 0; i < files.length; i++) {
+        var post = files[i].node.post;
+        if (!post) continue;
+        if (Object.prototype.hasOwnProperty.call(seen, post.url)) continue;
+        seen[post.url] = 1;
+        unique++;
+        words += post.words || 0;
+      }
+      write(pad(words, 8) + '  ' + pathString(found.segments) + '  (words)');
+      write(unique + ' unique posts; copies under categories/ and tags/ counted once', 'dim');
+    },
+
+    man: function (args) {
+      if (!args.length) {
+        write('What manual page do you want?', 'err');
+        write('try: man ls', 'dim');
+        return;
+      }
+      var name = String(args[0]).toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(ALIASES, name)) name = ALIASES[name];
+      if (!Object.prototype.hasOwnProperty.call(MANPAGES, name)) {
+        write('No manual entry for ' + args[0], 'err');
+        return;
+      }
+      var page = MANPAGES[name];
+      write(name.toUpperCase() + '(1)', 'accent');
+      writeBlank();
+      write('NAME', 'accent');
+      write('     ' + name + ' - ' + page.name);
+      writeBlank();
+      write('SYNOPSIS', 'accent');
+      write('     ' + page.usage);
+      writeBlank();
+      write('DESCRIPTION', 'accent');
+      for (var i = 0; i < page.desc.length; i++) write('     ' + page.desc[i]);
+    },
+
+    history: function () {
+      if (!history.length) {
+        write('(no history yet)', 'dim');
+        return;
+      }
+      for (var i = 0; i < history.length; i++) {
+        write(pad(i + 1, 4) + '  ' + history[i]);
+      }
+    },
+
+    echo: function (args) {
+      write(args.join(' '));
+    },
+
+    env: function () {
+      write('USER=visitor');
+      write('HOME=~');
+      write('PWD=' + currentPath());
+      write('SHELL=/bin/blogsh');
+      write('TERM=xterm-256color');
+      write('POSTS=' + posts.length);
+      write('SKIN=' + (currentSkin() || 'matrix'));
+    },
+
+    which: function (args) {
+      if (!args.length) {
+        write('usage: which <command>', 'err');
+        return;
+      }
+      var name = String(args[0]).toLowerCase();
+      var real = Object.prototype.hasOwnProperty.call(ALIASES, name)
+        ? ALIASES[name] : name;
+      if (Object.prototype.hasOwnProperty.call(COMMANDS, real)) {
+        write('/usr/bin/' + real + (real === name ? '' : '  (' + name + ' is an alias for ' + real + ')'));
+      } else {
+        write(name + ' not found', 'err');
+      }
+    },
+
+    uname: function (args) {
+      var parsed = parseArgs(args);
+      if (parsed.flags.a) {
+        write('blogsh static 4.0 #1 SMP jekyll x86_64 GNU/Linux');
+        return;
+      }
+      write('blogsh');
+    },
+
+    date: function () {
+      write(new Date().toString());
+    },
+
+    // less is cat without a pager: the output area already scrolls.
+    less: function (args) {
+      COMMANDS.cat(args);
+    },
+
+    // `posts` predates the filesystem and was in the tap bar, so it stays as
+    // a shortcut for listing the posts directory in long form.
+    posts: function () {
+      COMMANDS.ls(['-l', '~/posts']);
+    },
+
+    neofetch: function () {
+      var art = [
+        '   .--.   ',
+        '  |o_o |  ',
+        '  |:_/ |  ',
+        ' //   \\ \\ ',
+        '(|     | )',
+        '/\\_   _/\\ ',
+        '\\___)=(___/'
+      ];
+      var rows = [
+        ['visitor@blog', ''],
+        ['os', 'jekyll static'],
+        ['shell', 'blogsh 4.0'],
+        ['posts', String(posts.length)],
+        ['cwd', currentPath()],
+        ['theme', currentSkin() || 'matrix'],
+        ['uptime', 'since you loaded the page'],
+        ['tracking', 'none']
+      ];
+      for (var i = 0; i < Math.max(art.length, rows.length); i++) {
+        var a = art[i] || '           ';
+        var r = rows[i];
+        writeNeofetchRow(a, r ? r[0] : '', r ? r[1] : '');
+      }
+    },
+
     skin: function (args) {
       if (!args.length) {
-        write('usage: skin <name>');
-        writeBlank();
-        write('  matrix    green on black (default)');
-        write('  amber     amber phosphor');
-        write('  paper     dark on light');
-        write('  netscape  1997, and proud of it');
-        writeBlank();
+        write('skins: matrix, amber, paper, netscape');
         write('current: ' + (currentSkin() || 'matrix'), 'dim');
+        write('usage: skin <name>', 'dim');
         return;
       }
       var want = String(args[0]).toLowerCase();
@@ -399,8 +1227,7 @@
     },
 
     sudo: function (args) {
-      var what = args.length ? args.join(' ') : '';
-      if (what) {
+      if (args.length) {
         write('visitor is not in the sudoers file. This incident has been', 'err');
         write('reported to absolutely nobody.', 'err');
       } else {
@@ -424,17 +1251,15 @@
       }, 300);
     },
 
-    // The other novelty route. Kept as a command rather than only a link
-    // so the three views are reachable from inside any of them.
+    // The other novelty route. Kept as a command as well as a link so all
+    // three views are reachable from inside any of them.
     retro: function () {
-      write('warping to 1998 ...');
+      write('loading the retro version ...');
       window.setTimeout(function () {
         window.location.href = retroUrl;
       }, 400);
     },
 
-    // Same destination as `exit`, but named for the view rather than the
-    // action, so `help` reads as a list of places you can go.
     modern: function () {
       write('loading the modern site ...');
       window.setTimeout(function () {
@@ -444,17 +1269,21 @@
   };
 
   var ALIASES = {
-    ls: 'posts',
-    dir: 'posts',
+    dir: 'ls',
+    ll: 'ls',
+    la: 'ls',
     quit: 'exit',
     q: 'exit',
     cls: 'clear',
-    man: 'help',
     '?': 'help',
-    find: 'grep',
+    h: 'help',
     search: 'grep',
     theme: 'skin',
-    fetch: 'neofetch'
+    fetch: 'neofetch',
+    more: 'less',
+    view: 'cat',
+    cwd: 'pwd',
+    hist: 'history'
   };
 
   // Levenshtein distance, small and iterative. Only used to suggest a
@@ -605,15 +1434,38 @@
         return;
       }
 
-      if (verb !== 'cat' && verb !== 'open') return;
+      if (verb === 'man' || verb === 'which') {
+        var cmds = commandNames();
+        var cmdHits = [];
+        for (var c = 0; c < cmds.length; c++) {
+          if (cmds[c].indexOf(frag) === 0) cmdHits.push(cmds[c]);
+        }
+        applyCompletion(parts, cmdHits);
+        return;
+      }
 
-      var slugs = [];
-      for (var i = 0; i < posts.length; i++) {
-        if (posts[i].slug && posts[i].slug.toLowerCase().indexOf(frag) === 0) {
-          slugs.push(posts[i].slug);
+      // Path completion for every command that takes one. Splits the
+      // fragment into a directory part (resolved) and a leaf to match, so
+      // "cat posts/2026-06" completes inside posts/.
+      var raw = parts[parts.length - 1];
+      var cut = raw.lastIndexOf('/');
+      var dirPart = cut === -1 ? '' : raw.substring(0, cut + 1);
+      var leaf = (cut === -1 ? raw : raw.substring(cut + 1)).toLowerCase();
+
+      var base = resolvePath(dirPart);
+      if (!base || base.node.type !== 'dir') return;
+
+      var entries = listing(base.node);
+      var names = [];
+      for (var e = 0; e < entries.length; e++) {
+        var nm = entries[e].name;
+        if (nm.toLowerCase().indexOf(leaf) === 0) {
+          // Keep the directory prefix the user typed, and append a slash to
+          // directories so you can keep tabbing deeper.
+          names.push(dirPart + nm + (entries[e].type === 'dir' ? '/' : ''));
         }
       }
-      applyCompletion(parts, slugs);
+      applyCompletion(parts, names);
       return;
     }
 
@@ -721,7 +1573,8 @@
 
   var BOOT_LINES = [
     'booting static site kernel ...',
-    'mounting /posts ... ' + posts.length + ' entries',
+    'mounting ~/posts ... ' + posts.length + ' entries',
+    'building ~/categories and ~/tags ...',
     'no database. no tracking. no cookies.',
     'ready.'
   ];

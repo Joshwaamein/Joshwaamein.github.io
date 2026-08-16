@@ -11,7 +11,7 @@ Every line of HTML, SCSS, and JS lives in this repo (no third-party theme, no Bo
 - Vanilla Jekyll 4 with custom layouts/includes/SCSS — no theme dependency
 - **Three ways to read the site**, switchable from the header of any page:
   - `/` (the normal blog)
-  - `/terminal/` is a keyboard-driven console (`help`, `posts`, `open <n>`, `cat`, `grep`, `skin`, …)
+  - `/terminal/` is a shell where posts are files: `ls`, `cd`, `cat`, `grep`, `find`, `tree`
   - `/retro/` is the same content as a 1998 home page, complete with visitor counter
 - Matrix-green / GitHub-dark palette + light + WCAG high-contrast a11y mode
 - Toggleable Matrix-rain canvas background (respects `prefers-reduced-motion`)
@@ -30,8 +30,33 @@ retro page.
 | Route | What it is | Needs JS |
 |---|---|---|
 | `/` | The standard blog | No |
-| `/terminal/` | A console: type `help` to start. Command history, tab completion, post search via `grep`, four colour skins, and a boot sequence that plays once per browser | Yes (falls back to a plain post list) |
+| `/terminal/` | A shell over a virtual filesystem. Posts are files under `~/posts`, and the same posts appear again under `~/categories/<cat>/` and `~/tags/<tag>/` the way hardlinks do. Real path handling (`..`, `-`, `~`, absolute and relative), a cwd-aware prompt, path-aware tab completion, command history, four colour skins, and a boot sequence that plays once per browser | Yes (falls back to a plain post list) |
 | `/retro/` | A period-accurate 1998 home page: table layout, beveled borders, rainbow rules, hit counter. Standalone CSS, loads none of the modern stylesheet | No |
+
+The header chip for the third mode is labelled **retro** rather than 1998, so
+the switcher names a mode rather than a year.
+
+### Terminal commands
+
+Navigation: `ls [-l] [path]`, `cd <path>`, `pwd`, `tree [path]`.
+Reading: `cat <file>...`, `head`/`tail [-n N]`, `less`, `open [file]`.
+Searching: `grep [-i] [-l] <string> [path]`, `find [path] -name <glob>`, `wc [-w|-l]`.
+System: `stat`, `file`, `du`, `man <cmd>`, `history`, `whoami`, `uname`, `date`,
+`env`, `echo`, `which`, `clear`.
+Elsewhere: `modern`, `retro`, `skin [name]`, `neofetch`, `exit`.
+
+Two deliberate constraints in the implementation:
+
+- **No user input ever reaches a RegExp.** `grep` matches with `indexOf` and
+  `find` walks its glob character by character, so no typed pattern can hang
+  the page (ReDoS). Globs support `*` and `?`.
+- **Path lookups use `hasOwnProperty`.** A bare `children[name]` lookup would
+  resolve inherited members, so `cd constructor` would find something. It
+  returns "No such file or directory" instead, and there are tests for it.
+
+`grep` and `du` dedupe by post URL, because a post filed under three
+categories appears at three paths; `grep` reports the canonical `~/posts/`
+path rather than whichever grouping sorted first.
 
 The terminal deliberately avoids `innerHTML` for anything derived from post
 data, and both novelty routes escape every interpolated value: a post title
