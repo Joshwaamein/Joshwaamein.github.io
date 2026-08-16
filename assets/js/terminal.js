@@ -49,6 +49,11 @@
 
   // The live prompt element, so `cd` is visible in the prompt itself.
   var ps1El = document.getElementById('term-ps1');
+  // The window titlebar, which a real terminal also tracks the cwd in.
+  var barTitleEl = document.querySelector('.term-bar-title');
+  var barTitlePrefix = barTitleEl
+    ? barTitleEl.textContent.replace(/:\s*~\s*$/, '')
+    : '';
 
   function promptText() {
     return 'visitor@blog:' + currentPath() + '$';
@@ -56,6 +61,7 @@
 
   function updatePrompt() {
     if (ps1El) ps1El.textContent = promptText();
+    if (barTitleEl) barTitleEl.textContent = barTitlePrefix + ': ' + currentPath();
   }
 
   // Echo the command the way a shell does: styled prompt, plain text cmd.
