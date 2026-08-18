@@ -91,7 +91,7 @@ bundle exec jekyll serve --livereload
 ├── _layouts/             # default, home, page, post, archive, category, tag, terminal
 ├── _includes/            # head, header, nav, footer, post-card, pagination, toc, view-switch
 ├── _sass/                # tokens, base, layout, components, post, syntax, terminal
-├── _posts/               # 37 blog posts (markdown)
+├── _posts/               # 38 blog posts (markdown)
 ├── _tabs/                # top-nav pages (about, archives, categories, tags)
 ├── terminal.html         # /terminal/ console route
 ├── retro.html            # /retro/ 1998 route (self-contained, own CSS)
