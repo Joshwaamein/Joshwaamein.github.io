@@ -33,7 +33,7 @@ Every block in the first file lines up with a dead session in the other two, ins
 The line that gave the game away came from `cline.log`:
 
 ```json
-{"time":"2026-08-19T00:14:11.492Z","msg":"Agent loop caught error",
+{"time":"2026-08-15T00:14:11.492Z","msg":"Agent loop caught error",
  "err":{"type":null,"message":null}}
 ```
 
@@ -171,12 +171,12 @@ So both lists are now empty:
 
 ```python
 RED_PATTERNS = [
-    # Empty as of 2026-08-20. Add rules back one at a time as real incidents
+    # Empty as of 2026-08-16. Add rules back one at a time as real incidents
     # justify them. Each new entry needs a fixture in test-guard-fixtures.py.
 ]
 
 RED_PATHS = [
-    # Empty as of 2026-08-20. Add rules back one at a time as real incidents
+    # Empty as of 2026-08-16. Add rules back one at a time as real incidents
     # justify them. Each new entry needs a fixture in test-guard-fixtures.py.
 ]
 ```
