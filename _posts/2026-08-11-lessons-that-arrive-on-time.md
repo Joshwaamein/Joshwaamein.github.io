@@ -1,7 +1,7 @@
 ---
 title: "Lessons That Arrive On Time: A Scored Corpus, and What Six Phases Actually Cost"
 description: "Continuing from \"When the Output Looks Right\": building discernment into a coding agent. A dated lesson in a rules file is useless at the moment it matters, so I moved them into a scored corpus that injects the relevant warning two seconds before the mistake. Then the measurements: one frontmatter field cut a scheduled job from $0.31 to $0.05, cost scales with tool calls rather than jobs, and a real scheduled job cost 17 times what a trivial one did."
-date: 2026-08-20 14:30:00 +0100
+date: 2026-08-11 20:00:00 +0100
 categories: [AI, DevOps]
 tags: [cline, claude, llm, agents, self-learning, memory, automation, scheduling, cost]
 ---

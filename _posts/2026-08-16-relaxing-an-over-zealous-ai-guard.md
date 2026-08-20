@@ -1,7 +1,7 @@
 ---
 title: "Relaxing an Over-Zealous AI Guard: A Silent Abort, a Three-Character Bypass, and an Empty Rule List"
 description: "My Cline PreToolUse hook was ending whole conversations with no error message, because a tool_call hook that returns cancel aborts the entire agent run and discards the reason on the way, rather than denying the single call. Finding that led me to a three-character bypass in my own destructive-delete check, 52 of 90 fixtures asserting the wrong thing, a hook that had never run once, and the decision to clear both rule lists and start from zero."
-date: 2026-08-20 14:45:00 +0100
+date: 2026-08-16 19:00:00 +0100
 categories: [AI, DevOps]
 tags: [cline, claude, llm, agents, hooks, guardrails, testing, automation]
 ---
@@ -225,7 +225,7 @@ The guard has the same shebang and works fine, because the prefilter invokes it 
 
 ## The Lessons That Never Arrived
 
-This one requires a correction to a post I published earlier today.
+This one requires a correction to an earlier post in this series.
 
 The guard's other job is retrieval. On an allow, it queries my lessons corpus, a SQLite database of dated corrections scored by severity and burn count, and returns the relevant one as `contextModification`. The audit line shows it working:
 

@@ -1,7 +1,7 @@
 ---
 title: "When the Output Looks Right: Why a Green Test Suite Stops You Looking"
 description: "Anthropic's AI Fluency Index found that people get less critical exactly when an AI produces something polished: fact-checking drops 3.7 points and spotting missing context drops 5.2 points the moment code or documents are involved. I reproduced that finding on myself twice in one day, finding four gaps in my own tooling across two test suites that were both at 100%. What I built instead of trying harder: lifecycle hooks that can veto a tool call, and adversarial review with a deliberately narrow trigger list."
-date: 2026-08-20 14:00:00 +0100
+date: 2026-08-04 19:00:00 +0100
 categories: [AI, DevOps]
 tags: [cline, claude, llm, agents, adversarial-review, multi-agent, hooks, testing]
 ---
