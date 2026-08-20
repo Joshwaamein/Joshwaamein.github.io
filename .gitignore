@@ -9,6 +9,11 @@ vendor/
 .bundle/
 Gemfile.lock
 
+# Local Docker preview (see reference/blog-publishing.md). The container
+# copies Gemfile.preview to /tmp to build, but bundler still drops a lock
+# beside the source. Build artefact, never commit it.
+Gemfile.preview.lock
+
 # Editors
 .vscode/
 .idea/
