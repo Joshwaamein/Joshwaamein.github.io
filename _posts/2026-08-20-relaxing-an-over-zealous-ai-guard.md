@@ -237,9 +237,33 @@ In [Lessons That Arrive On Time](/posts/lessons-that-arrive-on-time/) I describe
 
 `tool_call` is also the only hook event with a return channel at all. Every other event, `agent_start`, `prompt_submit`, `tool_result`, `agent_end`, `agent_abort` and `session_shutdown`, is dispatched detached and its output ignored. There is no second door.
 
-So the honest status: retrieval works, scoring works, the corpus is good, delivery does not happen on Cline 3.0.55. The one route that would work is the same lever as the refusal, prepending the lesson to the command through `overrideInput` so it lands in the tool output the model reads. I have not done it yet, because it mutates every allowed command and I want to decide whether that noise is worth it for anything below blocking severity. The `lessons=1` in my audit log proved retrieval ran. I read it as proof of delivery, which it never was.
+So the honest status at the time of writing was: retrieval works, scoring works, the corpus is good, delivery does not happen on Cline 3.0.55. The `lessons=1` in my audit log proved retrieval ran. I read it as proof of delivery, which it never was.
 
 One useful correction in the other direction: `prompt_submit` does fire on this build, contrary to my earlier probe notes. It cannot inject anything, but it can record what I actually asked for, which is the signal I had assumed no hook could see.
+
+### Update, an hour later: delivery works now
+
+The route was already sitting in the guard, because it is the same lever the refusal uses. A matched lesson is now prepended to a `run_commands` call as an extra `printf` element:
+
+```python
+{"overrideInput": {"commands": ["printf '%s\\n' " + shlex.quote(text), *original]}}
+```
+
+Prepending an element rather than splicing into the command is the whole design. My own command strings pass through byte-identical and in order, so the worst case for a quoting bug is one failed `printf` beside a correct result. The limits are deliberately narrow: `run_commands` only, since `start_background_command` takes a single string and delivery there would mean editing the command itself; `blocking` and `warn` severities only; two lessons maximum on top of the existing 800-character cap; and `CLINE_LESSON_DELIVERY=off` as a kill switch. Cost is 56ms on a delivering call against 27ms on a plain one, and that difference is the `hit_count` update retrieval was already doing.
+
+The audit line now separates the two things I had conflated:
+
+```
+ALLOW tool=run_commands subagent=False strings=2 lessons=2 delivered=1
+```
+
+And the change immediately broke five of my own fixtures, for a reason worth the embarrassment of writing down: a refusal and a lesson delivery both return `overrideInput`, and both suites defined "blocked" as "the output contains `overrideInput`". That is the same mistake as the 52 of 90 above, one layer along, made about ninety minutes after publishing this. I fixed it in the guard rather than in the tests, so every path now says what it decided instead of leaving it to be inferred:
+
+```json
+{"guardDecision": "allow" | "deliver" | "refuse", ...}
+```
+
+The runtime reads only `cancel`, `overrideInput`, `context` and `review`, and its schema passes unknown keys through, so declaring the decision costs nothing.
 
 ## One File, Two Sessions
 
@@ -259,7 +283,7 @@ Two agents editing one file is a race with no warning and no merge conflict to n
 
 5. **Fixing an instance is not fixing a class.** The 08-17 fix covered "safe path beside a real target". Three days later the same shape reappeared as "safe target before a real target" and went unnoticed. When a bug turns up, ask what shape it is, then look for that shape one level up.
 
-6. **Assert on outcomes, not mechanisms.** 52 of 90 tests failed on a change that made the product better, because they tested how a refusal was spelled rather than whether the call was refused.
+6. **Assert on outcomes, not mechanisms.** 52 of 90 tests failed on a change that made the product better, because they tested how a refusal was spelled rather than whether the call was refused. I then repeated it within the hour: adding lesson delivery broke five fixtures that read `overrideInput` as proof of a block, when by then it meant either a block or a delivery. The guard now declares its decision so nothing has to guess.
 
 7. **Classify by what has actually happened.** `rm -rf node_modules` looks alarming to a regex and has never cost me anything. A one-word change to a private overlay network's route advertisements looks harmless and can reroute traffic for every machine on it. Until either actually does damage, neither earns a rule.
 
