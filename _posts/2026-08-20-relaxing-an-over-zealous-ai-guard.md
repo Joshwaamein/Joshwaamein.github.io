@@ -261,6 +261,6 @@ Two agents editing one file is a race with no warning and no merge conflict to n
 
 6. **Assert on outcomes, not mechanisms.** 52 of 90 tests failed on a change that made the product better, because they tested how a refusal was spelled rather than whether the call was refused.
 
-7. **Classify by what has actually happened.** `rm -rf node_modules` looks alarming to a regex and has never cost me anything. `tailscale set --advertise-routes` looks harmless and can reroute traffic across the whole tailnet. Until either actually does damage, neither earns a rule.
+7. **Classify by what has actually happened.** `rm -rf node_modules` looks alarming to a regex and has never cost me anything. A one-word change to a private overlay network's route advertisements looks harmless and can reroute traffic for every machine on it. Until either actually does damage, neither earns a rule.
 
 The guard source, the fixture suite and the autonomy rules live in my Cline config, which I described in [How I Steer Cline With a Tiered Rules System](/posts/how-i-steer-cline-with-a-tiered-rules-system/). Both rule lists in it are empty as of today. The next entry will carry a date, the incident that justified it, and a test on both sides.
