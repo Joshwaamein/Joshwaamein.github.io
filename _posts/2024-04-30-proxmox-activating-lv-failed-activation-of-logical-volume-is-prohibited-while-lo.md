@@ -9,6 +9,16 @@ description: "Logical volumes (LVs) in Linux provide a powerful layer of abstrac
 
 So you’ve just rebooted your Proxmox server—maybe after a kernel update—and now your local-lvm storage is gone and you’re staring at a cryptic “Activation of logical volume is prohibited” error. Fun times, right? I ran into this exact issue and it took a bit of digging to sort out, so here’s what I found.
 
+**Update, September 2026:** two years later I hit this error again, and the cause
+was not the one described below. The `thin_check_options` fix in this post treats
+one possible cause; on my hypervisor `thin_check` was never running at all, and
+the real culprit was two concurrent `vgchange -aay` calls racing inside the
+initramfs. If the fix here does not work for you, or works and then stops
+working, read [My Steering Rules Hid a Bug for Three Months, Then Found It in an
+Hour](/posts/my-steering-rules-hid-a-bug-for-three-months/) for the other cause
+and how to tell them apart. I am leaving this post as written, because the advice
+below is correct for the variant it describes.
+
 ![](https://joshuamein.wordpress.com/wp-content/uploads/2024/04/image-25.png?w=989)
 
 Logical volumes (LVs) in Linux provide a powerful layer of abstraction for managing storage. Their flexibility lets you easily shrink, expand, and manage disk space. However, on Proxmox, sometimes you might encounter the frustrating error message “activating LV failed: Activation of logical volume is prohibited while logical volume is active. (500)” when working with LVs. Let’s unravel this error and find solutions.

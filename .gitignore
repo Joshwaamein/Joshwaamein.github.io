@@ -32,3 +32,11 @@ docker-compose.yml
 social-posts/
 _drafts/
 
+# Local Docker preview helpers (see reference/blog-publishing.md). The lock in
+# particular pins a different sass converter than CI uses, so it must never be
+# committed.
+Gemfile.preview
+Gemfile.preview.lock
+preview-serve.sh
+_site_test/
+
