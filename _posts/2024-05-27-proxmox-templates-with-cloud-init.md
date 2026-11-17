@@ -9,6 +9,13 @@ description: "Cloud images are operating system templates and every instance sta
 
 As part of my upcoming Kubernetes deployment and workload migration, I wanted to standardise and streamline the creation of virtual machines on my Proxmox hosts. I have spent far too long in the Ubuntu install wizard and manually configuring servers. To do this, I used a template VM with a cloud image of Ubuntu 24.04 LTS and cloud-init for my SSH keys for secure authentication.
 
+**Update, September 2026:** two parts of this post are out of date. The two-step
+disk import shown below (`qm importdisk`, then attaching the disk) can now be
+done in one command, and the "Optimised Kernel" benefit no longer applies to
+Ubuntu 24.04 cloud images, which ship the same kernel as the server install. The
+current method and the measurements are in [Provisioning Proxmox VMs From Cloud
+Images](/posts/proxmox-cloud-image-provisioning-pipeline/).
+
 My aim with this mini-project is to create a template which uses the latest version of Ubuntu LTS with automatic machine and user configuration, SSH keys, and updates on the clone. To do this, I used a pre-configured cloud Ubuntu template from [https://cloud-images.ubuntu.com/](https://cloud-images.ubuntu.com/) along with cloud-init. I used the documentation here to configure cloud-init: [https://technotim.live/posts/cloud-init-cloud-image/](https://technotim.live/posts/cloud-init-cloud-image/).
 
 ## What Are the Benefits of Cloud Images?
